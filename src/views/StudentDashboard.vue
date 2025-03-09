@@ -1,59 +1,79 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">Öğrenci Paneli</h1>
+      <h1 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">
+        Öğrenci Paneli
+      </h1>
 
       <!-- Available Assignments -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="assignment in assignments"
-          :key="assignment.id"
+          :key="assignment.icerikId"
           class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition duration-300"
         >
           <div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ assignment.baslik }}</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">
+              {{ assignment.baslik }}
+            </h3>
             <p class="text-sm text-gray-600 mb-4">
               Teslim Tarihi: {{ formatDate(assignment.bitisTarihi) }}
             </p>
             <p class="text-gray-700 mb-4">{{ assignment.aciklama }}</p>
             <p class="text-sm text-gray-500 mb-4">
-              Oluşturan: <span class="font-medium text-indigo-700">{{ assignment.olusturanKullanici }}</span>
+              Oluşturan:
+              <span class="font-medium text-indigo-700">{{
+                assignment.olusturanKullanici
+              }}</span>
             </p>
           </div>
 
+          <!-- Dosya Yükleme Alanı -->
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1" for="file-upload-{{ assignment.id }}">
-              Dosya Yükle
-            </label>
             <input
-              id="file-upload-{{ assignment.id }}"
               type="file"
-              class="block w-full text-sm text-gray-500 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              @change="handleFileUpload($event, assignment.id)"
+              :id="'file-upload-' + assignment.icerikId"
+              class="hidden"
+              @change="($event) => fileSelected($event, assignment.icerikId)"
             />
-          </div>
-
-          <div class="mb-4">
-            <select
-              class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              v-model="selectedOptions[assignment.id]"
+            <label
+              :for="'file-upload-' + assignment.icerikId"
+              class="block w-full cursor-pointer text-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
             >
-              <option value="">Bir işlem seçin</option>
-              <option value="submit">Gönder</option>
-              <option value="view">Detayları Gör</option>
-            </select>
+              Dosya Seç
+            </label>
+            <p
+              v-if="uploadedFiles[assignment.icerikId]"
+              class="text-sm text-green-600 mt-2"
+            >
+              Seçilen Dosya: {{ uploadedFiles[assignment.icerikId].name }}
+            </p>
           </div>
 
-          <button
-            @click="handleAction(assignment.id)"
-            class="w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Devam Et
-          </button>
+          <!-- Butonlar -->
+          <div class="flex gap-4">
+            <button
+              @click="submitFile(assignment.icerikId)"
+              :disabled="!uploadedFiles[assignment.icerikId]"
+              class="flex-1 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+            >
+              Gönder
+            </button>
+
+            <button
+              @click="viewDetails(assignment.icerikId)"
+              class="flex-1 py-2 px-4 border border-indigo-600 shadow-sm text-sm font-medium rounded-md text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Detayları Gör
+            </button>
+          </div>
         </div>
       </div>
 
-      <div v-if="assignments.length === 0" class="text-center text-gray-500 mt-12">
+      <div
+        v-if="assignments.length === 0"
+        class="text-center text-gray-500 mt-12"
+      >
         <p>Henüz mevcut ödev yok.</p>
       </div>
     </div>
@@ -67,58 +87,90 @@ export default {
   data() {
     return {
       assignments: [],
-      selectedOptions: {},
       uploadedFiles: {},
     };
   },
   methods: {
     async fetchAssignments() {
-  try {
-    // Vuex Store'dan token al
-    const token = this.$store.state.token;
+      try {
+        const token = this.$store.state.token;
+        if (!token) {
+          throw new Error("Token bulunamadı! Lütfen giriş yapın.");
+        }
 
-    if (!token) {
-      throw new Error("Token bulunamadı! Lütfen giriş yapın.");
-    }
+        const response = await axios.get("https://localhost:7057/api/Icerik", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        this.assignments = response.data;
+      } catch (error) {
+        console.error("Ödevler alınamadı:", error);
+      }
+    },
 
-    const response = await axios.get("https://localhost:7057/api/Icerik", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    this.assignments = response.data;
-  } catch (error) {
-    console.error("Error fetching assignments:", error);
-  }
-},
+    // Dosya seçme işleyici - yeni isim verdim ve mantığı basitleştirdim
+    fileSelected(event, icerikId) {
+      console.log("fileSelected çağrıldı, icerikId:", icerikId); // Debug için
+      
+      const file = event.target.files[0];
+      if (file) {
+        // Her ödevin kendi dosyasını tutacak şekilde atama yapıyoruz
+        this.uploadedFiles = {
+          ...this.uploadedFiles,
+          [icerikId]: file
+        };
+        console.log(`Ödev ${icerikId} için dosya yüklendi:`, file.name);
+      }
+    },
 
-    handleAction(assignmentId) {
-      const selectedOption = this.selectedOptions[assignmentId];
-      const file = this.uploadedFiles[assignmentId];
-
-      if (!selectedOption) {
-        alert("Lütfen bir seçenek seçin.");
+    // Dosya gönderme işleyici - yeni isim verdim
+    async submitFile(icerikId) {
+      console.log("submitFile çağrıldı, icerikId:", icerikId); // Debug için
+      
+      const file = this.uploadedFiles[icerikId];
+      if (!file) {
+        alert("Lütfen bir dosya seçin.");
         return;
       }
 
-      if (selectedOption === "submit" && !file) {
-        alert("Lütfen bir dosya yükleyin.");
-        return;
-      }
+      try {
+        const formData = new FormData();
+        formData.append("user_id", this.$store.getters.userId);
+        formData.append("content_id", icerikId);
+        formData.append("file", file);
 
-      if (selectedOption === "submit") {
-        console.log(`Ödev ${assignmentId} dosya ile gönderiliyor...`, file);
-        // Gönderme işlemi için gerekli kodu buraya ekleyebilirsiniz
-      } else if (selectedOption === "view") {
-        console.log(`Ödev ${assignmentId} detayları gösteriliyor...`);
-        // Detayları gösterme işlemi için gerekli kodu buraya ekleyebilirsiniz
+        const response = await axios.post(
+          "https://localhost:7057/upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${this.$store.state.token}`,
+            },
+          }
+        );
+
+        console.log("Dosya başarıyla yüklendi:", response.data);
+        alert("Dosya başarıyla yüklendi!");
+        
+        // Başarılı upload sonrası dosya seçimini sıfırlayalım
+        const newUploadedFiles = {...this.uploadedFiles};
+        delete newUploadedFiles[icerikId];
+        this.uploadedFiles = newUploadedFiles;
+        
+        // Input'u temizle
+        document.getElementById('file-upload-' + icerikId).value = '';
+      } catch (error) {
+        console.error("Dosya yükleme hatası:", error);
+        alert("Dosya yüklenirken hata oluştu.");
       }
     },
-    handleFileUpload(event, assignmentId) {
-      const input = event.target;
-      if (input.files && input.files[0]) {
-        this.$set(this.uploadedFiles, assignmentId, input.files[0]);
-        console.log(`Dosya yüklendi:`, input.files[0]);
-      }
+
+    // İsim değişikliği - daha açıklayıcı
+    viewDetails(icerikId) {
+      console.log(`Ödev ${icerikId} detayları gösteriliyor...`);
+      // Ödev detaylarını görüntüleme kodunu buraya ekleyebilirsin
     },
+
     formatDate(date) {
       return new Date(date).toLocaleString();
     },
@@ -128,5 +180,3 @@ export default {
   },
 };
 </script>
-
-
