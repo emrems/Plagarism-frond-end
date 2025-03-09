@@ -172,7 +172,7 @@ export default {
           `https://localhost:7057/api/Icerik/teacher/${this.teacherName}`
         );
         this.assignments = response.data;
-        this.totalAssignments = this.assignments.length;
+       // this.totalAssignments = this.assignments.length;
       } catch (error) {
         console.error("Ödevleri çekerken bir hata oluştu:", error);
         this.assignments = [];
@@ -183,6 +183,7 @@ export default {
         const response = await axios.get(
           "https://localhost:7057/api/Icerik/active"
         );
+
         this.activeAssignments = response.data;
       } catch (error) {
         console.error("Aktif ödevleri çekerken bir hata oluştu:", error);

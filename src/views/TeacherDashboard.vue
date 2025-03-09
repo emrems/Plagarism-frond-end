@@ -8,7 +8,9 @@
         <h2 class="text-xl font-semibold mb-4">Yeni Ödev Oluştur</h2>
         <form @submit.prevent="createAssignment" class="space-y-4">
           <div>
-            <label for="title" class="block text-sm font-medium text-gray-700">Ödev Başlığı</label>
+            <label for="title" class="block text-sm font-medium text-gray-700"
+              >Ödev Başlığı</label
+            >
             <input
               id="title"
               v-model="newAssignment.title"
@@ -19,7 +21,11 @@
           </div>
 
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700">Açıklama</label>
+            <label
+              for="description"
+              class="block text-sm font-medium text-gray-700"
+              >Açıklama</label
+            >
             <textarea
               id="description"
               v-model="newAssignment.description"
@@ -30,7 +36,11 @@
           </div>
 
           <div>
-            <label for="startDate" class="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
+            <label
+              for="startDate"
+              class="block text-sm font-medium text-gray-700"
+              >Başlangıç Tarihi</label
+            >
             <input
               id="startDate"
               v-model="newAssignment.startDate"
@@ -41,7 +51,11 @@
           </div>
 
           <div>
-            <label for="deadline" class="block text-sm font-medium text-gray-700">Son Teslim Tarihi</label>
+            <label
+              for="deadline"
+              class="block text-sm font-medium text-gray-700"
+              >Son Teslim Tarihi</label
+            >
             <input
               id="deadline"
               v-model="newAssignment.deadline"
@@ -74,7 +88,9 @@
             >
               <div class="flex items-center justify-between">
                 <div>
-                  <h3 class="text-lg font-medium text-gray-900">{{ assignment.baslik }}</h3>
+                  <h3 class="text-lg font-medium text-gray-900">
+                    {{ assignment.baslik }}
+                  </h3>
                   <p class="mt-1 text-sm text-gray-500">
                     Başlangıç: {{ formatDate(assignment.olusturmaTarihi) }}
                   </p>
@@ -99,7 +115,9 @@
               </div>
             </li>
           </ul>
-          <div v-else class="px-4 py-8 text-center text-gray-500">Henüz ödev oluşturulmamış.</div>
+          <div v-else class="px-4 py-8 text-center text-gray-500">
+            Henüz ödev oluşturulmamış.
+          </div>
         </div>
       </div>
     </div>
@@ -123,15 +141,34 @@ export default {
   },
   methods: {
     async fetchAssignments() {
-      try {
-        const response = await axios.get("https://localhost:7057/api/Icerik", {
-          headers: { Authorization: `Bearer ${this.$store.state.token}` },
-        });
-        this.assignments = response.data;
-      } catch (error) {
-        console.error("Ödevler alınamadı:", error);
-      }
-    },
+  try {
+    // Kullanıcı ID'sine erişim
+    const teacherId = this.$store.getters.userId;
+
+    // teacherId'nin null veya undefined olup olmadığını kontrol et
+    if (!teacherId) {
+      console.error("Öğretmen ID'si bulunamadı.");
+      this.error = "Öğretmen ID'si bulunamadı."; // Kullanıcıya hata mesajı göster
+      return;
+    }
+
+    const response = await axios.get(`https://localhost:7057/api/Icerik/teacher/${teacherId}/all`, {
+      headers: { Authorization: `Bearer ${this.$store.state.token}` },
+    });
+
+    // Eğer response başarılıysa, veriyi assignments'a kaydet
+    if (response.status === 200) {
+      this.assignments = response.data;
+    } else {
+      this.error = "Ödevler alınamadı. Lütfen tekrar deneyin.";
+      console.error("Ödevler alınamadı. Status:", response.status);
+    }
+  } catch (error) {
+    console.error("Ödevler alınamadı:", error);
+    this.error = "Bir hata oluştu. Lütfen tekrar deneyin."; // Hata mesajı kullanıcıya gösteriliyor
+  }
+},
+
 
     async createAssignment() {
       try {

@@ -70,9 +70,11 @@ export default {
           throw new Error("Login failed");
         }
         const data = await response.json();
+        console.log(data);
         this.$store.dispatch("login", {
           token: data.token,
           role: data.rol,
+          id: data.id,  // Gelen "id" bilgisi ile store'a kaydediyoruz
         });
         if (data.rol === "Admin") {
           this.$router.push({ name: "AdminDashboard" });
@@ -82,6 +84,7 @@ export default {
           this.$router.push({ name: "StudentDashboard" });
         }
       } catch (error) {
+        console.error("Login error:", error);
         this.error = "E-posta veya şifre yanlış. Lütfen tekrar deneyin.";
       }
     },
