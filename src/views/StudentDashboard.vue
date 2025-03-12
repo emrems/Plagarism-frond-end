@@ -101,6 +101,7 @@ export default {
         const response = await axios.get("https://localhost:7057/api/Icerik", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Ödevler alındı:", response.data);
         this.assignments = response.data;
       } catch (error) {
         console.error("Ödevler alınamadı:", error);
@@ -139,7 +140,7 @@ export default {
         formData.append("file", file);
 
         const response = await axios.post(
-          "https://localhost:7057/upload",
+          "http://127.0.0.1:5000/upload",
           formData,
           {
             headers: {
