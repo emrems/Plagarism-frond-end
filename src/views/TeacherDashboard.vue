@@ -75,7 +75,12 @@
               <div class="flex items-center justify-between">
                 <div>
                   <h3 class="text-lg font-medium text-gray-900">
-                    {{ assignment.baslik }}
+                    <span class="inline-flex items-center">
+                      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      {{ assignment.baslik }}
+                    </span>
                   </h3>
                   <p class="mt-1 text-sm text-gray-500">
                     Başlangıç: {{ formatDate(assignment.olusturmaTarihi) }}
@@ -98,58 +103,11 @@
                     Sil
                   </button>
                   <button
-                    @click="toggleSubmissions(assignment.icerikId)"
+                    @click="openSubmissionModal(assignment.icerikId)"
                     class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200"
                   >
                     Gönderilen Ödevler
                   </button>
-                </div>
-              </div>
-
-              <!-- Gönderilen Ödevler -->
-              <div v-if="assignment.showSubmissions" class="mt-4">
-                <h4 class="text-lg font-medium text-gray-900 mb-2">Gönderilen Ödevler</h4>
-                <ul v-if="assignment.submissions && assignment.submissions.length > 0" class="divide-y divide-gray-200">
-                  <li
-                    v-for="submission in assignment.submissions"
-                    :key="submission.dosyaId"
-                    class="px-4 py-4 sm:px-6 bg-gray-50 rounded-lg shadow-sm"
-                  >
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <p class="text-sm text-gray-500">
-                          <span class="font-medium">Öğrenci:</span> {{ submission.kullanici.ad }} {{ submission.kullanici.soyad }}
-                        </p>
-                        <p class="text-sm text-gray-500">
-                          <span class="font-medium">Dosya:</span> {{ submission.cleanedPath }}
-                        </p>
-                      </div>
-                      <div class="flex space-x-2">
-                        <button
-                          @click="downloadFile(submission)"
-                          class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                          </svg>
-                          İndir
-                        </button>
-                        <button
-                          @click="viewFile(submission)"
-                          class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                        >
-                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 17l1.5 1.5L5 17m14 0l1.5 1.5L22 17m-8-5h.01M12 16h.01M16 12h.01M8 12h.01"></path>
-                          </svg>
-                          Görüntüle
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-                <div v-else class="px-4 py-8 text-center text-gray-500">
-                  Henüz gönderilen ödev yok.
                 </div>
               </div>
             </li>
@@ -159,9 +117,66 @@
           </div>
         </div>
       </div>
+
+      <!-- Gönderilen Ödevler Modal -->
+      <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Gönderilen Ödevler</h3>
+            <button @click="closeModal" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div v-if="currentSubmissions.length > 0" class="space-y-4">
+            <div
+              v-for="submission in currentSubmissions"
+              :key="submission.dosyaId"
+              class="p-4 bg-gray-50 rounded-lg shadow-sm"
+            >
+              <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex-1">
+                  <p class="text-sm text-gray-500">
+                    <span class="font-medium">Öğrenci:</span> {{ submission.kullanici.ad }} {{ submission.kullanici.soyad }}
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    <span class="font-medium">Dosya:</span> {{ submission.cleanedPath }}
+                  </p>
+                </div>
+                <div class="flex space-x-2 mt-2 md:mt-0">
+                  <button
+                    @click="downloadFile(submission)"
+                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    İndir
+                  </button>
+                  <button
+                    @click="viewFile(submission)"
+                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 17l1.5 1.5L5 17m14 0l1.5 1.5L22 17m-8-5h.01M12 16h.01M16 12h.01M8 12h.01"></path>
+                    </svg>
+                    Görüntüle
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="px-4 py-8 text-center text-gray-500">
+            Henüz gönderilen ödev yok.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
 <script>
 import axios from "axios";
 
@@ -176,6 +191,8 @@ export default {
         deadline: "",
       },
       error: "", // Hata mesajı
+      isModalOpen: false, // Modal açık/kapalı durumu
+      currentSubmissions: [], // Seçilen ödevin gönderimleri
     };
   },
   methods: {
@@ -208,35 +225,29 @@ export default {
       }
     },
 
-    async toggleSubmissions(assignmentId) {
-      const assignment = this.assignments.find(a => a.icerikId === assignmentId);
-      if (!assignment) {
-        console.error("Ödev bulunamadı:", assignmentId);
-        this.error = "Ödev bulunamadı.";
-        return;
-      }
+    async openSubmissionModal(assignmentId) {
+      try {
+        const response = await axios.get(`https://localhost:7057/api/Dosya/${assignmentId}`, {
+          headers: { Authorization: `Bearer ${this.$store.state.token}` },
+        });
 
-      if (assignment.showSubmissions) {
-        assignment.showSubmissions = false;
-      } else {
-        try {
-          const response = await axios.get(`https://localhost:7057/api/Dosya/${assignmentId}`, {
-            headers: { Authorization: `Bearer ${this.$store.state.token}` },
-          });
-
-          if (response.status === 200) {
-            console.log("Gönderilen ödevler alındı:", response.data);
-            assignment.submissions = response.data;
-            assignment.showSubmissions = true;
-          } else {
-            console.error("Gönderilen ödevler alınamadı. Status:", response.status);
-            this.error = "Gönderilen ödevler alınamadı.";
-          }
-        } catch (error) {
-          console.error("Gönderilen ödevler alınamadı:", error);
-          this.error = "Gönderilen ödevler alınamadı. Lütfen tekrar deneyin.";
+        if (response.status === 200) {
+          console.log("Gönderilen ödevler alındı:", response.data);
+          this.currentSubmissions = response.data;
+          this.isModalOpen = true;
+        } else {
+          console.error("Gönderilen ödevler alınamadı. Status:", response.status);
+          this.error = "Gönderilen ödevler alınamadı.";
         }
+      } catch (error) {
+        console.error("Gönderilen ödevler alınamadı:", error);
+        this.error = "Gönderilen ödevler alınamadı. Lütfen tekrar deneyin.";
       }
+    },
+
+    closeModal() {
+      this.isModalOpen = false;
+      this.currentSubmissions = [];
     },
 
     async createAssignment() {
@@ -324,52 +335,17 @@ export default {
 </script>
 
 <style>
-.container {
-  max-width: 500px;
+/* Modal Stili */
+.fixed {
+  position: fixed;
 }
-.card {
-  border: none;
-  border-radius: 10px;
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
-.btn {
-  border-radius: 5px;
-}
-.submission-list {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-}
-.submission-item {
-  padding: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-.submission-item:last-child {
-  border-bottom: none;
-}
-
-/* İndir ve Görüntüle Butonları */
-.bg-blue-600 {
-  background-color: #2563eb;
-}
-.bg-blue-700 {
-  background-color: #1d4ed8;
-}
-.bg-green-600 {
-  background-color: #16a34a;
-}
-.bg-green-700 {
-  background-color: #15803d;
-}
-
-/* Kart Tasarımı */
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-.shadow-sm {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+.bg-opacity-50 {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
