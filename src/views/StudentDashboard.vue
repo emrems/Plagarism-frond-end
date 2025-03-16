@@ -35,6 +35,7 @@
               :id="'file-upload-' + assignment.icerikId"
               class="hidden"
               @change="($event) => fileSelected($event, assignment.icerikId)"
+              accept=".pdf,.docx"
             />
             <label
               :for="'file-upload-' + assignment.icerikId"
@@ -45,6 +46,7 @@
             <p
               v-if="uploadedFiles[assignment.icerikId]"
               class="text-sm text-green-600 mt-2"
+              
             >
               Seçilen Dosya: {{ uploadedFiles[assignment.icerikId].name }}
             </p>
