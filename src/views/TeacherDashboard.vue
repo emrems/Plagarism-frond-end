@@ -364,7 +364,7 @@ export default {
         );
 
         if (response.status === 200) {
-          console.log("Ödevler alındı:", response.data);
+          //console.log("Ödevler alındı:", response.data);
           this.assignments = response.data.map((assignment) => ({
             ...assignment,
             showSubmissions: false,
@@ -462,21 +462,35 @@ export default {
 
       try {
         this.isLoading = true; // Loading başlat
+
+        // Tarihleri ISO formatına çevir
+        const formattedStartDate = new Date(
+          this.newAssignment.startDate
+        ).toISOString();
+        const formattedDeadline = this.newAssignment.deadline
+          ? new Date(this.newAssignment.deadline).toISOString()
+          : null;
+
+        console.log("Gönderilen Başlangıç Tarihi:", formattedStartDate);
+        console.log("Gönderilen Bitiş Tarihi:", formattedDeadline);
+
         const response = await axios.post(
           "https://localhost:7057/api/Icerik",
           {
-            baslik: this.newAssignment.title,
-            aciklama: this.newAssignment.description,
-            baslangicTarihi: this.newAssignment.startDate,
-            teslimTarihi: this.newAssignment.deadline,
+            Baslik: this.newAssignment.title, 
+            Aciklama: this.newAssignment.description,
+            OlusturmaTarihi: formattedStartDate,
+            BitisTarihi: formattedDeadline,
           },
           {
-            headers: { Authorization: `Bearer ${this.$store.state.token}` },
-            "Content-Type": "application/json",
+            headers: {
+              Authorization: `Bearer ${this.$store.state.token}`,
+              "Content-Type": "application/json",
+            },
           }
         );
 
-        if (response.status === 201) {
+        if (response.status === 200) {
           this.newAssignment = {
             title: "",
             description: "",
@@ -517,7 +531,7 @@ export default {
 
     async downloadFile(submission) {
       try {
-        this.isLoading = true; // Loading başlat
+        this.isLoading = true; 
         const response = await axios.get(
           `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`,
           {
@@ -538,13 +552,16 @@ export default {
         console.error("Dosya indirilemedi:", error);
         this.error = "Dosya indirilemedi. Lütfen tekrar deneyin.";
       } finally {
-        this.isLoading = false; // Loading durdur
+        this.isLoading = false; 
       }
     },
 
     viewFile(submission) {
       const fileUrl = `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`;
-      window.open(fileUrl, "_blank"); // Yeni sekmede aç
+      window.open(fileUrl, "_blank"); 
+    },
+    closeSuccessMessage() {
+      this.successMessage = "";
     },
   },
   mounted() {
