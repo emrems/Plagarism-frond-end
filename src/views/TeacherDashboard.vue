@@ -2,14 +2,31 @@
   <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Öğretmen Paneli</h1>
-      <div class="absolute top-4 right-4">
-      <button
-        @click="logout"
-        class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+      <!-- Font Awesome CDN -->
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        rel="stylesheet"
+      />
+
+      <div
+        class="absolute top-4 right-4 flex items-center gap-4 bg-white p-2 rounded-lg shadow-md"
       >
-        Çıkış Yap
-      </button>
-    </div>
+        <div class="flex items-center gap-2">
+          <!-- Font Awesome kullanıcı ikonu -->
+          <i class="fas fa-user-circle text-gray-700 text-3xl"></i>
+          <span class="text-gray-700 font-medium text-sm">
+            Hoş geldiniz,
+            <span class="font-semibold">{{ userName }}</span>
+          </span>
+        </div>
+        <button
+          @click="logout"
+          class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+        >
+          Çıkış Yap
+        </button>
+      </div>
+
       <!-- Yükleniyor İndikatörü -->
       <div
         v-if="isLoading"
@@ -353,6 +370,12 @@ export default {
       currentIcerikId: null, // Seçilen ödevin icerikId'si
     };
   },
+  computed: {
+    // Kullanıcı adını Vuex store'dan al
+    userName() {
+      return this.$store.getters.getUserName;
+    },
+  },
   methods: {
     async fetchAssignments() {
       try {
@@ -485,7 +508,7 @@ export default {
         const response = await axios.post(
           "https://localhost:7057/api/Icerik",
           {
-            Baslik: this.newAssignment.title, 
+            Baslik: this.newAssignment.title,
             Aciklama: this.newAssignment.description,
             OlusturmaTarihi: formattedStartDate,
             BitisTarihi: formattedDeadline,
@@ -539,7 +562,7 @@ export default {
 
     async downloadFile(submission) {
       try {
-        this.isLoading = true; 
+        this.isLoading = true;
         const response = await axios.get(
           `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`,
           {
@@ -560,13 +583,13 @@ export default {
         console.error("Dosya indirilemedi:", error);
         this.error = "Dosya indirilemedi. Lütfen tekrar deneyin.";
       } finally {
-        this.isLoading = false; 
+        this.isLoading = false;
       }
     },
 
     viewFile(submission) {
       const fileUrl = `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`;
-      window.open(fileUrl, "_blank"); 
+      window.open(fileUrl, "_blank");
     },
     closeSuccessMessage() {
       this.successMessage = "";

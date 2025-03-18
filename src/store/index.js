@@ -7,6 +7,7 @@ const store = createStore({
     role: localStorage.getItem("role") || null,
     id: localStorage.getItem("id") || null,
     refreshToken: localStorage.getItem("refreshToken") || null,
+    userName: localStorage.getItem("userName") || null,
   },
   mutations: {
     setToken(state, token) {
@@ -26,26 +27,45 @@ const store = createStore({
       localStorage.setItem("refreshToken", refreshToken);
       document.cookie = `refreshToken=${refreshToken}; HttpOnly; Secure; SameSite=Strict;`;
     },
+    setUserName(state, userName) {
+      console.log("Setting userName:", userName); // Debug için log ekleyin
+      if (!userName) {
+        console.error("userName is undefined or null!"); // Hata durumunda log ekleyin
+      }
+      state.userName = userName;
+      localStorage.setItem("userName", userName);
+    },
     clearAuth(state) {
       state.token = null;
       state.role = null;
       state.id = null;
+      state.userName = null;
       state.refreshToken = null;
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("id");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userName");
       document.cookie = "refreshToken=; Max-Age=0; Secure; SameSite=Strict;";
     },
   },
   actions: {
-    async login({ commit }, { token, role, id, refreshToken }) {
-      commit("setToken", token);
-      commit("setRole", role);
-      commit("setId", id);
-      commit("setRefreshToken", refreshToken);
+    async login({ commit }, { token, role, id, refreshToken, userName }) {
+      try {
+        console.log("Received userName:", userName);
+        if (!userName) {
+          console.error("userName is undefined or null!"); // Hata durumunda log ekleyin
+          throw new Error("userName is required!");
+        }
+        commit("setToken", token);
+        commit("setRole", role);
+        commit("setId", id);
+        commit("setRefreshToken", refreshToken);
+        commit("setUserName", userName); // Kullanıcı adını kaydet
+      } catch (error) {
+        console.error("Login action error:", error);
+      }
     },
-
     async refreshToken({ commit, dispatch }) {
       try {
         const response = await axios.post("/api/auth/refresh", {}, { withCredentials: true });
@@ -58,7 +78,6 @@ const store = createStore({
         throw error;
       }
     },
-
     logout({ commit }) {
       commit("clearAuth");
     },
@@ -68,7 +87,8 @@ const store = createStore({
     userRole: (state) => state.role,
     userId: (state) => state.id,
     getRefreshToken: (state) => state.refreshToken,
+    getUserName: (state) => state.userName, // Kullanıcı adını döndüren getter
   },
 });
 
-export default store;
+export default store; 

@@ -35,13 +35,10 @@
         </div>
       </form>
       <p v-if="error" class="text-red-500 text-sm text-center mt-4">{{ error }}</p>
+      
       <!-- Kayıt Ol Butonu -->
       <div class="mt-4 text-center">
-        <button 
-          @click="goToRegister" 
-          type="button" 
-          class="text-blue-600 hover:underline"
-        >
+        <button @click="goToRegister" type="button" class="text-blue-600 hover:underline">
           Kayıt Ol
         </button>
       </div>
@@ -50,6 +47,8 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
@@ -60,6 +59,8 @@ export default {
   },
   methods: {
     async login() {
+      console.log("Giriş yap butonuna basıldı.");
+
       try {
         const response = await fetch("https://localhost:7057/api/Auth/login", {
           method: "POST",
@@ -68,36 +69,79 @@ export default {
         });
 
         if (!response.ok) {
-          throw new Error("Login failed");
+          throw new Error("Giriş başarısız");
         }
 
         const data = await response.json();
-        console.log(data);
+        console.log("Giriş başarılı, gelen veri:", data);
 
-        // Store'da oturum açma işlemi
-        this.$store.dispatch("login", {
+        // Vuex'e kullanıcı bilgilerini kaydet
+        await this.$store.dispatch("login", {
           token: data.token,
           role: data.rol,
-          id: data.id,  // Gelen "id" bilgisi ile store'a kaydediyoruz
-          refreshToken: data.refreshToken,  // Refresh token'ı da kaydediyoruz
+          id: data.id,
+          refreshToken: data.refreshToken,
+          userName: data.userName,
         });
 
-        // Kullanıcı rolüne göre yönlendirme
-        if (data.rol === "Admin") {
-          this.$router.push({ name: "AdminDashboard" });
-        } else if (data.rol === "Teacher") {
-          this.$router.push({ name: "TeacherDashboard" });
-        } else if (data.rol === "Student") {
-          this.$router.push({ name: "StudentDashboard" });
-        }
+        // Kullanıcı rolüne göre yönlendirme yap
+        this.redirectUser(data.rol);
       } catch (error) {
-        console.error("Login error:", error);
+        console.error("Giriş hatası:", error);
         this.error = "E-posta veya şifre yanlış. Lütfen tekrar deneyin.";
       }
     },
     goToRegister() {
+      console.log("Kayıt ol butonuna basıldı.");
       this.$router.push({ name: "Register" });
     },
+    redirectUser(role) {
+      if (role === "Admin") {
+        this.$router.push({ name: "AdminDashboard" });
+      } else if (role === "Teacher") {
+        this.$router.push({ name: "TeacherDashboard" });
+      } else if (role === "Student") {
+        this.$router.push({ name: "StudentDashboard" });
+      }
+    },
+    setupAxiosInterceptors() {
+      axios.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+          const originalRequest = error.config;
+          if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            try {
+              const newToken = await this.$store.dispatch("refreshToken");
+              axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+              originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+              return axios(originalRequest);
+            } catch (refreshError) {
+              this.$store.dispatch("logout");
+              return Promise.reject(refreshError);
+            }
+          }
+          return Promise.reject(error);
+        }
+      );
+    }
   },
+  watch: {
+    // Kullanıcı giriş yaptıysa login sayfasına yönlendirmeyi engelle
+    $route(to, from) {
+      if (this.$store.getters.isAuthenticated && (from.name === null || from.name === "Login")) {
+        this.redirectUser(this.$store.getters.userRole);
+      }
+    }
+  },
+  mounted() {
+    if (this.$store.getters.isAuthenticated) {
+      console.log("Kullanıcı zaten giriş yapmış.");
+      this.redirectUser(this.$store.getters.userRole);
+    }
+  },
+  created() {
+    this.setupAxiosInterceptors();
+  }
 };
 </script>

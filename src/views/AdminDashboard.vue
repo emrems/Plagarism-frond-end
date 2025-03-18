@@ -2,31 +2,55 @@
   <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
-      <div class="absolute top-4 right-4">
-      <button
-        @click="logout"
-        class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        rel="stylesheet"
+      />
+
+      <div
+        class="absolute top-4 right-4 flex items-center gap-4 bg-white p-2 rounded-lg shadow-md"
       >
-        Çıkış Yap
-      </button>
-    </div>
+        <div class="flex items-center gap-2">
+          <!-- Font Awesome kullanıcı ikonu -->
+          <i class="fas fa-user-circle text-gray-700 text-3xl"></i>
+          <span class="text-gray-700 font-medium text-sm">
+            Hoş geldiniz,
+            <span class="font-semibold">{{ userName }}</span>
+          </span>
+        </div>
+        <button
+          @click="logout"
+          class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+        >
+          Çıkış Yap
+        </button>
+      </div>
 
       <!-- Statistics Overview -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Tüm Kullanıcılar</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            Tüm Kullanıcılar
+          </h3>
           <p class="text-3xl font-bold text-indigo-600">{{ totalUsers }}</p>
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Oluşturulan Ödevler</h3>
-          <p class="text-3xl font-bold text-indigo-600">{{ totalAssignments }}</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            Oluşturulan Ödevler
+          </h3>
+          <p class="text-3xl font-bold text-indigo-600">
+            {{ totalAssignments }}
+          </p>
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Gönderilen Ödevler</h3>
-          <p class="text-3xl font-bold text-indigo-600">{{ totalAssignmentsForStudent }}</p>
-          
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            Gönderilen Ödevler
+          </h3>
+          <p class="text-3xl font-bold text-indigo-600">
+            {{ totalAssignmentsForStudent }}
+          </p>
         </div>
       </div>
 
@@ -39,11 +63,31 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Soyad</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-Posta</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Eylemler</th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Ad
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Soyad
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  E-Posta
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Rol
+                </th>
+                <th
+                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Eylemler
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -52,11 +96,26 @@
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.soyad }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.eposta }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ user.rol }}</span>
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
+                    >{{ user.rol }}</span
+                  >
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900 mr-4">Düzenle</button>
-                  <button @click="deleteUser(user.kullaniciId)" class="text-red-600 hover:text-red-900">Sil</button>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button
+                    @click="editUser(user)"
+                    class="text-indigo-600 hover:text-indigo-900 mr-4"
+                  >
+                    Düzenle
+                  </button>
+                  <button
+                    @click="deleteUser(user.kullaniciId)"
+                    class="text-red-600 hover:text-red-900"
+                  >
+                    Sil
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -90,17 +149,25 @@
             </form>
           </div>
           <div v-if="assignments.length > 0" class="px-4 py-5">
-            <details class="group bg-gray-100 rounded-lg p-4 mb-4 cursor-pointer hover:bg-gray-200">
-              <summary class="text-lg font-medium text-gray-900">Ödevler</summary>
+            <details
+              class="group bg-gray-100 rounded-lg p-4 mb-4 cursor-pointer hover:bg-gray-200"
+            >
+              <summary class="text-lg font-medium text-gray-900">
+                Ödevler
+              </summary>
               <ul class="mt-4 space-y-2">
                 <li
                   v-for="assignment in assignments"
                   :key="assignment.id"
                   class="p-4 border rounded-md shadow hover:bg-gray-100"
                 >
-                  <h3 class="text-lg font-medium text-gray-900">{{ assignment.baslik }}</h3>
+                  <h3 class="text-lg font-medium text-gray-900">
+                    {{ assignment.baslik }}
+                  </h3>
                   <p class="text-sm text-gray-500">{{ assignment.aciklama }}</p>
-                  <p class="text-sm text-gray-500">Bitiş Tarihi: {{ formatDate(assignment.bitisTarihi) }}</p>
+                  <p class="text-sm text-gray-500">
+                    Bitiş Tarihi: {{ formatDate(assignment.bitisTarihi) }}
+                  </p>
                 </li>
               </ul>
             </details>
@@ -124,17 +191,25 @@
             </button>
           </div>
           <div v-if="activeAssignments.length > 0" class="px-4 py-5">
-            <details class="group bg-gray-100 rounded-lg p-4 mb-4 cursor-pointer hover:bg-gray-200">
-              <summary class="text-lg font-medium text-gray-900">Aktif Ödevler</summary>
+            <details
+              class="group bg-gray-100 rounded-lg p-4 mb-4 cursor-pointer hover:bg-gray-200"
+            >
+              <summary class="text-lg font-medium text-gray-900">
+                Aktif Ödevler
+              </summary>
               <ul class="mt-4 space-y-2">
                 <li
                   v-for="assignment in activeAssignments"
                   :key="assignment.id"
                   class="p-4 border rounded-md shadow hover:bg-gray-100"
                 >
-                  <h3 class="text-lg font-medium text-gray-900">{{ assignment.baslik }}</h3>
+                  <h3 class="text-lg font-medium text-gray-900">
+                    {{ assignment.baslik }}
+                  </h3>
                   <p class="text-sm text-gray-500">{{ assignment.aciklama }}</p>
-                  <p class="text-sm text-gray-500">Bitiş Tarihi: {{ formatDate(assignment.bitisTarihi) }}</p>
+                  <p class="text-sm text-gray-500">
+                    Bitiş Tarihi: {{ formatDate(assignment.bitisTarihi) }}
+                  </p>
                 </li>
               </ul>
             </details>
@@ -157,17 +232,19 @@ export default {
       users: [],
       totalUsers: 0,
       totalAssignments: 0,
-      totalAssignmentsForStudent:0,
+      totalAssignmentsForStudent: 0,
       teacherName: "",
       assignments: [],
-      assigmentForStudent:[],
+      assigmentForStudent: [],
       activeAssignments: [],
     };
   },
   methods: {
     async fetchUsers() {
       try {
-        const response = await axios.get("https://localhost:7057/api/Kullanici");
+        const response = await axios.get(
+          "https://localhost:7057/api/Kullanici"
+        );
         this.users = response.data;
         this.totalUsers = this.users.length;
       } catch (error) {
@@ -180,7 +257,7 @@ export default {
           `https://localhost:7057/api/Icerik/teacher/${this.teacherName}`
         );
         this.assignments = response.data;
-       // this.totalAssignments = this.assignments.length;
+        // this.totalAssignments = this.assignments.length;
       } catch (error) {
         console.error("Ödevleri çekerken bir hata oluştu:", error);
         this.assignments = [];
@@ -205,20 +282,20 @@ export default {
       console.log("Düzenlenecek kullanıcı:", user);
     },
     async deleteUser(id) {
-      try{
-        const response = await axios.delete(`https://localhost:7057/api/Kullanici/${id}`);
-      this.users = this.users.filter((user) => user.id !== id);
-      this.fetchUsers();
-      }catch(error){
+      try {
+        const response = await axios.delete(
+          `https://localhost:7057/api/Kullanici/${id}`
+        );
+        this.users = this.users.filter((user) => user.id !== id);
+        this.fetchUsers();
+      } catch (error) {
         console.log("Kullanıcı silerken bir hata oluştu:", error);
       }
       console.log("Silinecek kullanıcı ID:", id);
     },
-    async GetAssigmentForTeacher(){
+    async GetAssigmentForTeacher() {
       try {
-        const response = await axios.get(
-          `https://localhost:7057/api/Icerik`
-        );
+        const response = await axios.get(`https://localhost:7057/api/Icerik`);
         //console.log(response.data)
         this.assignments = response.data;
         this.totalAssignments = this.assignments.length;
@@ -227,17 +304,14 @@ export default {
         this.assignments = [];
       }
     },
-    async GetAssigmentForStudent(){
+    async GetAssigmentForStudent() {
       try {
-        const response = await axios.get(
-          `https://localhost:7057/api/Dosya`
-        );
-        console.log(response.data)
+        const response = await axios.get(`https://localhost:7057/api/Dosya`);
+        console.log(response.data);
         this.assigmentForStudent = response.data;
         this.totalAssignmentsForStudent = this.assigmentForStudent.length;
       } catch (error) {
         console.error("Ödevleri çekerken bir hata oluştu:", error);
-        
       }
     },
     logout() {
@@ -245,9 +319,15 @@ export default {
       this.$router.push({ name: "Login" });
     },
   },
-  async mounted(){
+  computed: {
+    // Kullanıcı adını Vuex store'dan al
+    userName() {
+      return this.$store.getters.getUserName;
+    },
+  },
+  async mounted() {
     this.GetAssigmentForTeacher();
-    this.GetAssigmentForStudent();  
+    this.GetAssigmentForStudent();
   },
   created() {
     this.fetchUsers();

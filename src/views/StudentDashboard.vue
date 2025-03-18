@@ -1,7 +1,8 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Logout Butonu -->
-    <div class="absolute top-4 right-4">
+    <div class="absolute top-4 right-4 flex items-center gap-4">
+      <span class="text-gray-700 font-medium">Hoş geldin, {{ userName }}</span>
       <button
         @click="logout"
         class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -101,6 +102,12 @@ export default {
       assignments: [],
       uploadedFiles: {},
     };
+  },
+  computed: {
+    // Kullanıcı adını Vuex store'dan al
+    userName() {
+      return this.$store.getters.getUserName;
+    },
   },
   methods: {
     async fetchAssignments() {
