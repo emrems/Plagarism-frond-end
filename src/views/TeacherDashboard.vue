@@ -2,6 +2,14 @@
   <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Öğretmen Paneli</h1>
+      <div class="absolute top-4 right-4">
+      <button
+        @click="logout"
+        class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+      >
+        Çıkış Yap
+      </button>
+    </div>
       <!-- Yükleniyor İndikatörü -->
       <div
         v-if="isLoading"
@@ -562,6 +570,10 @@ export default {
     },
     closeSuccessMessage() {
       this.successMessage = "";
+    },
+    logout() {
+      this.$store.dispatch("logout");
+      this.$router.push({ name: "Login" });
     },
   },
   mounted() {

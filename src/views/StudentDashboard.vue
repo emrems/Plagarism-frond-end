@@ -1,5 +1,15 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+    <!-- Logout Butonu -->
+    <div class="absolute top-4 right-4">
+      <button
+        @click="logout"
+        class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+      >
+        Çıkış Yap
+      </button>
+    </div>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">
         Öğrenci Paneli
@@ -12,6 +22,7 @@
           :key="assignment.icerikId"
           class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition duration-300"
         >
+          <!-- Ödev Detayları -->
           <div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">
               {{ assignment.baslik }}
@@ -46,7 +57,6 @@
             <p
               v-if="uploadedFiles[assignment.icerikId]"
               class="text-sm text-green-600 mt-2"
-              
             >
               Seçilen Dosya: {{ uploadedFiles[assignment.icerikId].name }}
             </p>
@@ -110,25 +120,20 @@ export default {
       }
     },
 
-    // Dosya seçme işleyici - yeni isim verdim ve mantığı basitleştirdim
     fileSelected(event, icerikId) {
-      console.log("fileSelected çağrıldı, icerikId:", icerikId); // Debug için
-      
+      console.log("fileSelected çağrıldı, icerikId:", icerikId);
       const file = event.target.files[0];
       if (file) {
-        // Her ödevin kendi dosyasını tutacak şekilde atama yapıyoruz
         this.uploadedFiles = {
           ...this.uploadedFiles,
-          [icerikId]: file
+          [icerikId]: file,
         };
         console.log(`Ödev ${icerikId} için dosya yüklendi:`, file.name);
       }
     },
 
-    // Dosya gönderme işleyici - yeni isim verdim
     async submitFile(icerikId) {
-      console.log("submitFile çağrıldı, icerikId:", icerikId); // Debug için
-      
+      console.log("submitFile çağrıldı, icerikId:", icerikId);
       const file = this.uploadedFiles[icerikId];
       if (!file) {
         alert("Lütfen bir dosya seçin.");
@@ -154,28 +159,30 @@ export default {
 
         console.log("Dosya başarıyla yüklendi:", response.data);
         alert("Dosya başarıyla yüklendi!");
-        
-        // Başarılı upload sonrası dosya seçimini sıfırlayalım
-        const newUploadedFiles = {...this.uploadedFiles};
+
+        const newUploadedFiles = { ...this.uploadedFiles };
         delete newUploadedFiles[icerikId];
         this.uploadedFiles = newUploadedFiles;
-        
-        // Input'u temizle
-        document.getElementById('file-upload-' + icerikId).value = '';
+
+        document.getElementById("file-upload-" + icerikId).value = "";
       } catch (error) {
         console.error("Dosya yükleme hatası:", error);
         alert("Dosya yüklenirken hata oluştu.");
       }
     },
 
-    // İsim değişikliği - daha açıklayıcı
     viewDetails(icerikId) {
       console.log(`Ödev ${icerikId} detayları gösteriliyor...`);
-      // Ödev detaylarını görüntüleme kodunu buraya ekleyebilirsin
     },
 
     formatDate(date) {
       return new Date(date).toLocaleString();
+    },
+
+    // Logout Method'u
+    logout() {
+      this.$store.dispatch("logout"); // Vuex store'daki logout action'ını çağır
+      this.$router.push({ name: "Login" }); // Login sayfasına yönlendir
     },
   },
   mounted() {
