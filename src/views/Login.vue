@@ -66,16 +66,23 @@ export default {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ Eposta: this.email, Sifre: this.password }),
         });
+
         if (!response.ok) {
           throw new Error("Login failed");
         }
+
         const data = await response.json();
         console.log(data);
+
+        // Store'da oturum açma işlemi
         this.$store.dispatch("login", {
           token: data.token,
           role: data.rol,
           id: data.id,  // Gelen "id" bilgisi ile store'a kaydediyoruz
+          refreshToken: data.refreshToken,  // Refresh token'ı da kaydediyoruz
         });
+
+        // Kullanıcı rolüne göre yönlendirme
         if (data.rol === "Admin") {
           this.$router.push({ name: "AdminDashboard" });
         } else if (data.rol === "Teacher") {
