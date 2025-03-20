@@ -48,10 +48,14 @@
               class="hidden"
               @change="($event) => fileSelected($event, assignment.icerikId)"
               accept=".pdf,.docx"
+              :disabled="isDeadlinePassed(assignment.icerikId)"
             />
             <label
               :for="'file-upload-' + assignment.icerikId"
               class="block w-full cursor-pointer text-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
+              :class="{
+                'cursor-not-allowed bg-gray-300 border-red-500': isDeadlinePassed(assignment.icerikId)
+              }"
             >
               Dosya Seç
             </label>
@@ -67,15 +71,22 @@
           <div class="flex gap-4">
             <button
               @click="submitFile(assignment.icerikId)"
-              :disabled="!uploadedFiles[assignment.icerikId]"
+              :disabled="!uploadedFiles[assignment.icerikId] || isDeadlinePassed(assignment.icerikId)"
               class="flex-1 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+              :class="{
+                'bg-gray-300 cursor-not-allowed': isDeadlinePassed(assignment.icerikId)
+              }"
             >
               Gönder
             </button>
 
             <button
               @click="viewDetails(assignment.icerikId)"
+              :disabled="isDeadlinePassed(assignment.icerikId)"
               class="flex-1 py-2 px-4 border border-indigo-600 shadow-sm text-sm font-medium rounded-md text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              :class="{
+                'cursor-not-allowed border-red-500 text-red-500 hover:bg-red-200': isDeadlinePassed(assignment.icerikId)
+              }"
             >
               Detayları Gör
             </button>
@@ -121,7 +132,12 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Ödevler alındı:", response.data);
-        this.assignments = response.data;
+        
+        // Teslim tarihlerini assignments'a ekle
+        this.assignments = response.data.map((assignment) => ({
+          ...assignment,
+          deadlinePassed: new Date(assignment.bitisTarihi) < new Date(), // Teslim tarihini kontrol et
+        }));
       } catch (error) {
         console.error("Ödevler alınamadı:", error);
       }
@@ -141,12 +157,23 @@ export default {
 
     async submitFile(icerikId) {
       console.log("submitFile çağrıldı, icerikId:", icerikId);
+
+      // Teslim tarihi geçmişse dosya gönderme işlemi engelleniyor
+      const assignment = this.assignments.find(
+        (assignment) => assignment.icerikId === icerikId
+      );
+      if (assignment.deadlinePassed) {
+        alert("Ödev teslim tarihi geçtiği için dosya gönderilemez.");
+        return;
+      }
+
       const file = this.uploadedFiles[icerikId];
       if (!file) {
         alert("Lütfen bir dosya seçin.");
         return;
       }
 
+      // Dosya yükleme işlemi
       try {
         const formData = new FormData();
         formData.append("user_id", this.$store.getters.userId);
@@ -167,6 +194,7 @@ export default {
         console.log("Dosya başarıyla yüklendi:", response.data);
         alert("Dosya başarıyla yüklendi!");
 
+        // Dosya seçimini sıfırlama
         const newUploadedFiles = { ...this.uploadedFiles };
         delete newUploadedFiles[icerikId];
         this.uploadedFiles = newUploadedFiles;
@@ -184,6 +212,14 @@ export default {
 
     formatDate(date) {
       return new Date(date).toLocaleString();
+    },
+
+    // Teslim tarihinin geçmiş olup olmadığını kontrol eden fonksiyon
+    isDeadlinePassed(icerikId) {
+      const assignment = this.assignments.find(
+        (assignment) => assignment.icerikId === icerikId
+      );
+      return assignment && assignment.deadlinePassed;
     },
 
     // Logout Method'u
