@@ -203,7 +203,10 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                Teslim süresi doldu ({{ daysPassed(assignment.bitisTarihi) }} gün önce)
+                Teslim süresi doldu ({{
+                  daysPassed(assignment.bitisTarihi)
+                }}
+                gün önce)
               </div>
 
               <!-- Ödev İçeriği -->
@@ -274,7 +277,6 @@
                             ></path>
                           </svg>
                           Teslim: {{ formatDate(assignment.bitisTarihi) }}
-                          
                         </p>
                       </div>
                     </div>
@@ -855,7 +857,6 @@ export default {
         (similarity) => similarity.benzerlikOrani * 100 >= this.minSimilarity
       );
     },
-    
   },
   methods: {
     setSimilarityPreset(value) {
@@ -942,11 +943,21 @@ export default {
         this.isLoading = false; // Loading durdur
       }
     },
+    formatCreationDate(dateString) {
+      if (!dateString) return "Bilinmiyor";
+      const date = new Date(dateString);
+      return date.toLocaleDateString("tr-TR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    },
 
     closeModal() {
       this.isModalOpen = false;
       this.currentSubmissions = [];
       this.currentIcerikId = null;
+      this.error = ""; // Hata mesajını da temizleyin
     },
 
     async compareSubmissions() {
@@ -1142,7 +1153,6 @@ export default {
 </script>
 
 <style>
-
 btn-edit {
   @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors;
 }
