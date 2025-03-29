@@ -46,95 +46,125 @@
       </div>
 
       <!-- Yeni Ödev Oluşturma Formu -->
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Yeni Ödev Oluştur</h2>
-        <form @submit.prevent="createAssignment" class="space-y-4">
-          <div>
-            <label for="title" class="block text-sm font-medium text-gray-700"
-              >Ödev Başlığı</label
-            >
-            <input
-              id="title"
-              v-model="newAssignment.title"
-              type="text"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
+      <div class="container">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Yeni Ödev Oluştur</h2>
           </div>
 
-          <div>
-            <label
-              for="description"
-              class="block text-sm font-medium text-gray-700"
-              >Açıklama</label
-            >
-            <textarea
-              id="description"
-              v-model="newAssignment.description"
-              rows="4"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            ></textarea>
-          </div>
+          <form @submit.prevent="createAssignment">
+            <div class="form-group">
+              <label for="title">Ödev Başlığı</label>
+              <input
+                id="title"
+                v-model="newAssignment.title"
+                type="text"
+                required
+                placeholder="Örn: React ile Todo Uygulaması"
+              />
+            </div>
 
-          <div>
-            <label
-              for="startDate"
-              class="block text-sm font-medium text-gray-700"
-              >Başlangıç Tarihi</label
-            >
-            <input
-              id="startDate"
-              v-model="newAssignment.startDate"
-              type="datetime-local"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
+            <div class="form-group">
+              <label for="description">Açıklama</label>
+              <textarea
+                id="description"
+                v-model="newAssignment.description"
+                required
+                placeholder="Ödev detaylarını buraya yazın..."
+              ></textarea>
+            </div>
 
-          <div>
-            <label
-              for="deadline"
-              class="block text-sm font-medium text-gray-700"
-              >Son Teslim Tarihi</label
-            >
-            <input
-              id="deadline"
-              v-model="newAssignment.deadline"
-              type="datetime-local"
-              required
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
+            <div class="form-group date-inputs">
+              <div>
+                <label for="startDate">Başlangıç Tarihi</label>
+                <input
+                  id="startDate"
+                  v-model="newAssignment.startDate"
+                  type="datetime-local"
+                  required
+                />
+              </div>
 
-          <button
-            type="submit"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Ödev Oluştur
-          </button>
-        </form>
+              <div>
+                <label for="deadline">Son Teslim Tarihi</label>
+                <input
+                  id="deadline"
+                  v-model="newAssignment.deadline"
+                  type="datetime-local"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+              Ödev Oluştur
+            </button>
+          </form>
+        </div>
       </div>
       <!-- Başarı Mesajı Modal -->
       <div
         v-if="successMessage"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-300"
       >
         <div
-          class="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 p-6"
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 sm:max-w-md transform transition-all duration-300 scale-95 hover:scale-100"
         >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-green-600">
-              Başarıyla Ödev Oluşturuldu
-            </h3>
-          </div>
-          <div class="mt-4">
-            <button
-              @click="closeSuccessMessage"
-              class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Tamam
-            </button>
+          <div class="p-6">
+            <div class="flex items-center justify-center mb-5">
+              <div
+                class="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full"
+              >
+                <svg
+                  class="w-8 h-8 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <h3
+                class="text-2xl font-semibold text-gray-800 dark:text-white mb-2"
+              >
+                Başarıyla Ödev Oluşturuldu!
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-6">
+                Ödeviniz başarıyla oluşturuldu. Ödev listenizde
+                görüntüleyebilirsiniz.
+              </p>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                @click="closeSuccessMessage"
+                class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50"
+              >
+                Tamam
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -518,18 +548,18 @@ export default {
     return {
       minSimilarity: 0,
       similaritymodalOpen: false,
-      similarityData: [], 
-      isLoading: false, 
+      similarityData: [],
+      isLoading: false,
       isComparisonSuccess: false, // Karşılaştırma başarılı mı?
-      successMessage: "", 
-      assignments: [], 
+      successMessage: "",
+      assignments: [],
       newAssignment: {
         title: "",
         description: "",
         startDate: "",
         deadline: "",
       },
-      error: "", 
+      error: "",
       isModalOpen: false, // Modal açık/kapalı durumu
       currentSubmissions: [], // Seçilen ödevin gönderimleri
       currentIcerikId: null, // Seçilen ödevin icerikId'si
@@ -817,81 +847,238 @@ export default {
 
 <style>
 /* Modal Stili */
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --secondary: #f9fafb;
+  --border: #e5e7eb;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --danger: #ef4444;
+  --success: #10b981;
+  --radius: 0.5rem;
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Base styles */
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  color: var(--text);
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* Layout */
+.container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Card components */
+.card {
+  background-color: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: white;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  outline: none;
+  color: var(--text);
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn svg {
+  margin-right: 0.5rem;
+}
+
+/* Modal styles */
 .fixed {
   position: fixed;
 }
+
 .inset-0 {
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
 }
+
 .bg-opacity-50 {
   background-color: rgba(0, 0, 0, 0.5);
 }
+
 .rounded-lg {
   border-radius: 0.5rem;
 }
+
 .shadow-lg {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* Width utilities */
+.w-full {
+  width: 100%;
+}
+
 .w-11\/12 {
   width: 91.666667%;
 }
-.md\:w-3\/4 {
-  width: 75%;
-}
-.lg\:w-1\/2 {
-  width: 50%;
-}
+
+/* Padding */
 .p-6 {
   padding: 1.5rem;
 }
+
+/* Colors */
 .bg-white {
   background-color: #ffffff;
 }
+
 .text-gray-500 {
   color: #6b7280;
 }
+
 .text-gray-700 {
   color: #374151;
 }
+
 .text-gray-900 {
   color: #111827;
 }
+
 .text-white {
   color: #ffffff;
 }
+
+/* Button variants */
 .bg-blue-600 {
   background-color: #2563eb;
 }
+
 .hover\:bg-blue-700:hover {
   background-color: #1d4ed8;
 }
+
 .bg-green-600 {
   background-color: #16a34a;
 }
+
 .hover\:bg-green-700:hover {
   background-color: #15803d;
 }
+
 .bg-purple-600 {
   background-color: #9333ea;
 }
+
 .hover\:bg-purple-700:hover {
   background-color: #7e22ce;
 }
+
+.bg-red-600 {
+  background-color: #dc2626;
+}
+
+.hover\:bg-red-700:hover {
+  background-color: #b91c1c;
+}
+
+/* Focus states */
 .focus\:ring-2:focus {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
+
 .focus\:ring-offset-2:focus {
   outline-offset: 2px;
 }
+
 .focus\:ring-purple-500:focus {
   box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5);
 }
 
-/* Yeni eklemeler */
+/* Modal specific styles */
 .modal-content {
   padding: 2rem;
   background-color: #fff;
@@ -929,6 +1116,7 @@ export default {
   background-color: #2563eb;
   color: #fff;
 }
+
 .modal-button-blue:hover {
   background-color: #1d4ed8;
 }
@@ -937,6 +1125,7 @@ export default {
   background-color: #ef4444;
   color: #fff;
 }
+
 .modal-button-red:hover {
   background-color: #dc2626;
 }
@@ -945,7 +1134,27 @@ export default {
   background-color: #16a34a;
   color: #fff;
 }
+
 .modal-button-green:hover {
   background-color: #15803d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .date-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:w-3\/4 {
+    width: 75%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:w-1\/2 {
+    width: 50%;
+  }
 }
 </style>
