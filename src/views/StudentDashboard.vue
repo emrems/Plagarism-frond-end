@@ -188,7 +188,7 @@ export default {
       uploadedFiles: {},
       showToast: false,
       timeIntervals: {},
-      // Ödev türleri ve açıklamaları
+      
       assignmentTypes: {
         HOMEWORK: "Ödev",
         PROJECT: "Proje",

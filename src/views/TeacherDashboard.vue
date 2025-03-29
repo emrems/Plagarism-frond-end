@@ -170,27 +170,55 @@
       </div>
 
       <!-- Ödevler Listesi -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-4 py-5 sm:px-6">
-          <h2 class="text-xl font-semibold">Ödevleriniz</h2>
+      <div
+        class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
+      >
+        <!-- Başlık Alanı -->
+        <div class="px-6 py-5 border-b border-gray-100">
+          <h2 class="text-xl font-semibold text-gray-800">Ödevleriniz</h2>
         </div>
-        <div class="border-t border-gray-200">
-          <ul v-if="assignments.length > 0" class="divide-y divide-gray-200">
+
+        <!-- Ödev Listesi -->
+        <div class="divide-y divide-gray-100">
+          <ul v-if="assignments.length > 0">
             <li
               v-for="assignment in assignments"
               :key="assignment.id"
-              class="px-4 py-4 sm:px-6"
+              class="px-6 py-5 relative hover:bg-gray-50 transition-colors"
             >
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-lg font-medium text-gray-900">
-                    <span class="inline-flex items-center">
+              <!-- Geçmiş Ödev Uyarısı -->
+              <div
+                v-if="isDeadlinePassed(assignment.bitisTarihi)"
+                class="absolute top-0 left-0 right-0 bg-red-50 text-red-800 text-xs font-medium px-3 py-1 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Teslim süresi doldu ({{ daysPassed(assignment.bitisTarihi) }} gün önce)
+              </div>
+
+              <!-- Ödev İçeriği -->
+              <div
+                class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2"
+              >
+                <!-- Ödev Bilgileri -->
+                <div class="flex-1">
+                  <div class="flex items-start gap-3">
+                    <div class="p-2 bg-indigo-50 rounded-lg">
                       <svg
-                        class="w-5 h-5 mr-2"
+                        class="w-6 h-6 text-indigo-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
                           stroke-linecap="round"
@@ -199,222 +227,362 @@
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         ></path>
                       </svg>
-                      {{ assignment.baslik }}
-                    </span>
-                  </h3>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Başlangıç: {{ formatDate(assignment.olusturmaTarihi) }}
-                  </p>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Teslim: {{ formatDate(assignment.bitisTarihi) }}
-                  </p>
+                    </div>
+                    <div>
+                      <h3
+                        class="text-lg font-semibold text-gray-800 flex items-center"
+                      >
+                        {{ assignment.baslik }}
+                        <span
+                          v-if="isDeadlinePassed(assignment.bitisTarihi)"
+                          class="ml-2 text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-full"
+                          >GEÇTİ</span
+                        >
+                      </h3>
+                      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                        <p class="flex items-center text-sm text-gray-500">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 mr-1 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                          Başlangıç:
+                          {{ formatDate(assignment.olusturmaTarihi) }}
+                        </p>
+                        <p class="flex items-center text-sm text-gray-500">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 mr-1 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                          </svg>
+                          Teslim: {{ formatDate(assignment.bitisTarihi) }}
+                          
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex space-x-2">
-                  <button
-                    @click="editAssignment(assignment)"
-                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                  >
+
+                <!-- İşlem Butonları -->
+                <div class="flex flex-wrap gap-2 justify-end">
+                  <button @click="editAssignment(assignment)" class="btn-edit">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      ></path>
+                    </svg>
                     Düzenle
                   </button>
+
                   <button
                     @click="deleteAssignment(assignment.id)"
-                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200"
+                    class="btn-delete"
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
                     Sil
                   </button>
+
                   <button
                     @click="openSubmissionModal(assignment.icerikId)"
-                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200"
+                    class="btn-submissions"
                   >
-                    Gönderilen Ödevler
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    Gönderimler
                   </button>
 
-                  <div>
-                    <!-- Buton -->
-                    <button
-                      @click="openModel(assignment.icerikId)"
-                      class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-400 to-teal-500 hover:bg-green-600 transition duration-300"
+                  <button
+                    @click="openModel(assignment.icerikId)"
+                    class="btn-similarity"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      Benzerlik Sonuçlarını Görüntüle
-                    </button>
-
-                    <!-- Modal -->
-                    <VDialog
-                      v-model="similaritymodalOpen"
-                      persistent
-                      max-width="800px"
-                    >
-                      <VCard
-                        class="shadow-lg rounded-lg border border-gray-300 p-5"
-                      >
-                        <VCardTitle
-                          class="text-2xl font-bold text-center text-gray-800 mb-4"
-                        >
-                          Benzerlik Sonuçları
-                        </VCardTitle>
-
-                        <VCardText>
-                          <!-- Filtreleme Alanı (Input Box ile) -->
-                          <div
-                            class="flex items-center justify-between mb-4 p-2 bg-gray-100 rounded-lg"
-                          >
-                            <label
-                              for="similarityFilter"
-                              class="text-gray-700 font-medium"
-                            >
-                              Min. Benzerlik Oranı (%):
-                            </label>
-                            <input
-                              id="similarityFilter"
-                              v-model="minSimilarity"
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="1"
-                              class="w-1/3 px-2 py-1 border rounded-md focus:outline-none"
-                              placeholder="0"
-                            />
-                            <span class="text-gray-800 font-semibold"
-                              >{{ minSimilarity }}%</span
-                            >
-                          </div>
-
-                          <!-- Başlıklar -->
-                          <div
-                            class="grid grid-cols-5 gap-4 items-center bg-gray-100 py-2 px-4 rounded-md text-gray-700 font-semibold"
-                          >
-                            <div>Dosya 1</div>
-                            <div class="text-center">➝</div>
-                            <div>Dosya 2</div>
-                            <div class="text-center">Benzerlik</div>
-                            <div class="text-right">İnceleme</div>
-                          </div>
-
-                          <!-- Filtrelenmiş Sonuçlar -->
-                          <div v-if="filteredSimilarityData.length > 0">
-                            <div
-                              v-for="(
-                                similarity, index
-                              ) in filteredSimilarityData"
-                              :key="index"
-                              class="grid grid-cols-5 gap-4 items-center border-b py-3 px-4 hover:bg-gray-50 transition duration-300"
-                            >
-                              <!-- Dosya 1 -->
-                              <div
-                                class="flex items-center space-x-2 relative group"
-                              >
-                                <v-icon
-                                  class="fa fa-file text-blue-600"
-                                ></v-icon>
-                                <span
-                                  class="text-gray-700 truncate cursor-default"
-                                >
-                                  {{ similarity.ilkKullaniciAdiSoyad }}
-                                  <div class="tooltip">
-                                    {{ similarity.ilkKullaniciAdiSoyad }}
-                                  </div>
-                                </span>
-                              </div>
-
-                              <!-- Ok İşareti -->
-                              <div class="text-center text-gray-600">➝</div>
-
-                              <!-- Dosya 2 -->
-                              <div
-                                class="flex items-center space-x-2 relative group"
-                              >
-                                <v-icon
-                                  class="fa fa-file text-blue-600"
-                                ></v-icon>
-                                <span
-                                  class="text-gray-700 truncate cursor-default"
-                                >
-                                  {{ similarity.ikinciKullaniciAdiSoyad }}
-                                  <div class="tooltip">
-                                    {{ similarity.ikinciKullaniciAdiSoyad }}
-                                  </div>
-                                </span>
-                              </div>
-
-                              <!-- Benzerlik Oranı -->
-                              <div
-                                class="flex items-center justify-center space-x-2"
-                              >
-                                <v-icon
-                                  class="fa fa-chart-bar text-green-600"
-                                ></v-icon>
-                                <span
-                                  class="bg-green-100 text-green-800 text-sm font-semibold px-2 py-1 rounded-md"
-                                >
-                                  {{
-                                    (similarity.benzerlikOrani * 100).toFixed(
-                                      2
-                                    )
-                                  }}%
-                                </span>
-                              </div>
-
-                              <!-- Detaylı İnceleme Butonu -->
-                              <div class="text-right">
-                                <button
-                                  @click="viewDetails(similarity)"
-                                  class="inline-flex items-center px-3 py-1.5 text-white text-sm font-medium rounded-md transition duration-300 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 hover:shadow-md"
-                                >
-                                  <v-icon
-                                    class="fa fa-eye mr-2 text-sm"
-                                  ></v-icon>
-                                  İncele
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                          <p v-else class="text-center text-gray-500 mt-4">
-                            Eşleşen kayıt bulunamadı.
-                          </p>
-                        </VCardText>
-
-                        <VCardActions class="justify-center">
-                          <VBtn
-                            @click="closeModalSimilarityResponse"
-                            color="blue"
-                            class="px-4 py-2 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition duration-300"
-                          >
-                            Kapat
-                          </VBtn>
-                        </VCardActions>
-                      </VCard>
-                    </VDialog>
-                  </div>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      ></path>
+                    </svg>
+                    Benzerlik
+                  </button>
                 </div>
               </div>
             </li>
           </ul>
-          <div v-else class="px-4 py-8 text-center text-gray-500">
-            Henüz ödev oluşturulmamış.
+
+          <!-- Boş Liste Durumu -->
+          <div v-else class="px-6 py-12 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-16 w-16 mx-auto text-gray-300 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <p class="text-gray-500 text-lg">Henüz ödev bulunmamaktadır</p>
           </div>
         </div>
       </div>
 
+      <!-- Benzerlik Sonuçları Modalı -->
+      <VDialog v-model="similaritymodalOpen" persistent max-width="800px">
+        <VCard class="shadow-xl rounded-lg border border-gray-200 p-6">
+          <VCardTitle class="text-2xl font-bold text-center text-gray-800 mb-6">
+            Benzerlik Sonuçları
+          </VCardTitle>
+
+          <VCardText>
+            <!-- Gelişmiş Filtreleme Alanı -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Minimum Benzerlik Oranı</label
+                  >
+                  <div class="flex items-center gap-3">
+                    <input
+                      v-model="minSimilarity"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      @input="updateSimilarityFilter"
+                    />
+                    <span
+                      class="w-16 text-center font-semibold bg-white border border-gray-300 px-2 py-1 rounded"
+                    >
+                      {{ minSimilarity }}%
+                    </span>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    @click="setSimilarityPreset(30)"
+                    class="px-3 py-1 text-xs rounded border"
+                    :class="
+                      minSimilarity == 30
+                        ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                        : 'bg-white border-gray-300'
+                    "
+                  >
+                    Düşük (30%)
+                  </button>
+                  <button
+                    @click="setSimilarityPreset(50)"
+                    class="px-3 py-1 text-xs rounded border"
+                    :class="
+                      minSimilarity == 50
+                        ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                        : 'bg-white border-gray-300'
+                    "
+                  >
+                    Orta (50%)
+                  </button>
+                  <button
+                    @click="setSimilarityPreset(70)"
+                    class="px-3 py-1 text-xs rounded border"
+                    :class="
+                      minSimilarity == 70
+                        ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                        : 'bg-white border-gray-300'
+                    "
+                  >
+                    Yüksek (70%)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sonuç Listesi -->
+            <div class="space-y-4">
+              <div v-if="filteredSimilarityData.length > 0">
+                <!-- Başlıklar -->
+                <div
+                  class="grid grid-cols-12 gap-4 items-center bg-gray-50 py-3 px-4 rounded-lg text-gray-700 font-semibold"
+                >
+                  <div class="col-span-4">Dosya 1</div>
+                  <div class="col-span-1 text-center">↔</div>
+                  <div class="col-span-4">Dosya 2</div>
+                  <div class="col-span-2 text-center">Oran</div>
+                  <div class="col-span-1"></div>
+                </div>
+
+                <!-- Sonuçlar -->
+                <div
+                  v-for="(similarity, index) in filteredSimilarityData"
+                  :key="index"
+                  class="grid grid-cols-12 gap-4 items-center py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <div
+                    class="col-span-4 flex items-center gap-2 group relative"
+                  >
+                    <i class="fas fa-file-alt text-blue-500"></i>
+                    <span class="truncate">
+                      {{ similarity.ilkKullaniciAdiSoyad }}
+                    </span>
+                    <div class="tooltip">
+                      {{ similarity.ilkKullaniciAdiSoyad }}
+                    </div>
+                  </div>
+
+                  <div class="col-span-1 text-center text-gray-400">↔</div>
+
+                  <div
+                    class="col-span-4 flex items-center gap-2 group relative"
+                  >
+                    <i class="fas fa-file-alt text-blue-500"></i>
+                    <span class="truncate">
+                      {{ similarity.ikinciKullaniciAdiSoyad }}
+                    </span>
+                    <div class="tooltip">
+                      {{ similarity.ikinciKullaniciAdiSoyad }}
+                    </div>
+                  </div>
+
+                  <div class="col-span-2">
+                    <div class="flex items-center justify-center gap-2">
+                      <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                          class="bg-indigo-600 h-2.5 rounded-full"
+                          :style="{
+                            width: similarity.benzerlikOrani * 100 + '%',
+                          }"
+                        ></div>
+                      </div>
+                      <span class="text-sm font-semibold whitespace-nowrap">
+                        {{ (similarity.benzerlikOrani * 100).toFixed(0) }}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Detay Butonu -->
+                  <div class="col-span-1 flex justify-end">
+                    <button
+                      @click="viewDetails(similarity)"
+                      class="text-indigo-600 hover:text-indigo-800 transition-colors"
+                      title="Detayları Görüntüle"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="text-center py-8 text-gray-400">
+                <i class="fas fa-search-minus text-4xl text-gray-300 mb-2"></i>
+                <p>Filtreleme kriterlerinize uygun sonuç bulunamadı</p>
+              </div>
+            </div>
+          </VCardText>
+
+          <VCardActions class="justify-center pt-4">
+            <button
+              @click="closeModalSimilarityResponse"
+              class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              Kapat
+            </button>
+          </VCardActions>
+        </VCard>
+      </VDialog>
+
       <!-- Gönderilen Ödevler Modal -->
       <div
         v-if="isModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
       >
         <div
-          class="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 p-6"
+          class="bg-white rounded-xl shadow-xl w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 max-h-[90vh] flex flex-col"
         >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold">Gönderilen Ödevler</h3>
+          <!-- Modal Header -->
+          <div
+            class="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 rounded-t-xl flex justify-between items-center z-10"
+          >
+            <div>
+              <h3 class="text-xl font-bold text-gray-800">
+                Gönderilen Ödevler
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">
+                {{ currentSubmissions.length }} öğrenci tarafından gönderildi
+              </p>
+            </div>
             <button
               @click="closeModal"
-              class="text-gray-500 hover:text-gray-700"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <svg
                 class="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   stroke-linecap="round"
@@ -425,109 +593,200 @@
               </svg>
             </button>
           </div>
-          <div v-if="currentSubmissions.length > 0" class="space-y-4">
-            <div
-              v-for="submission in currentSubmissions"
-              :key="submission.dosyaId"
-              class="p-4 bg-gray-50 rounded-lg shadow-sm"
-            >
+
+          <!-- Modal Content -->
+          <div class="overflow-y-auto px-6 py-4 flex-1">
+            <div v-if="currentSubmissions.length > 0" class="space-y-3">
               <div
-                class="flex flex-col md:flex-row items-center justify-between"
-              >
-                <div class="flex-1">
-                  <p class="text-sm text-gray-500">
-                    <span class="font-medium">Öğrenci:</span>
-                    {{ submission.kullanici.ad }}
-                    {{ submission.kullanici.soyad }}
-                  </p>
-                  <p class="text-sm text-gray-500">
-                    <span class="font-medium">Dosya:</span>
-                    {{ submission.cleanedPath }}
-                  </p>
-                </div>
-                <div class="flex space-x-2 mt-2 md:mt-0">
-                  <button
-                    @click="downloadFile(submission)"
-                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      ></path>
-                    </svg>
-                    İndir
-                  </button>
-                  <button
-                    @click="viewFile(submission)"
-                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      ></path>
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M2 17l1.5 1.5L5 17m14 0l1.5 1.5L22 17m-8-5h.01M12 16h.01M16 12h.01M8 12h.01"
-                      ></path>
-                    </svg>
-                    Görüntüle
-                  </button>
-                </div>
-              </div>
-            </div>
-            <!-- Karşılaştır Butonu -->
-            <div class="mt-4">
-              <button
-                @click="compareSubmissions"
-                class="inline-flex justify-center w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                Karşılaştır
-              </button>
-              <!-- Karşılaştırma Başarı Mesajı -->
-              <div
-                v-if="isComparisonSuccess"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                v-for="submission in currentSubmissions"
+                :key="submission.dosyaId"
+                class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition-colors border border-gray-200"
               >
                 <div
-                  class="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 p-6"
+                  class="flex flex-col md:flex-row md:items-center justify-between gap-3"
                 >
-                  <h3 class="text-xl font-semibold text-green-600">
-                    Karşılaştırma Başarıyla Tamamlandı!
-                  </h3>
-                  <div class="mt-4">
+                  <!-- Student Info -->
+                  <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-2 rounded-full">
+                      <svg
+                        class="w-5 h-5 text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-medium text-gray-800">
+                        {{ submission.kullanici.ad }}
+                        {{ submission.kullanici.soyad }}
+                      </h4>
+                      <p class="text-sm text-gray-500 flex items-center mt-1">
+                        <svg
+                          class="w-4 h-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          ></path>
+                        </svg>
+                        {{ submission.cleanedPath }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2 justify-end">
                     <button
-                      @click="isComparisonSuccess = false"
-                      class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      @click="downloadFile(submission)"
+                      class="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                     >
-                      Tamam
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        ></path>
+                      </svg>
+                      <span class="hidden sm:inline">İndir</span>
+                    </button>
+                    <button
+                      @click="viewFile(submission)"
+                      class="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        ></path>
+                      </svg>
+                      <span class="hidden sm:inline">Görüntüle</span>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
+            <div v-else class="text-center py-8">
+              <div class="bg-gray-100 p-6 rounded-xl inline-block">
+                <svg
+                  class="w-12 h-12 mx-auto text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <h4 class="mt-3 text-gray-600 font-medium">
+                  Gönderilen ödev bulunamadı
+                </h4>
+                <p class="text-sm text-gray-500 mt-1">
+                  Öğrenciler henüz ödev göndermedi
+                </p>
+              </div>
+            </div>
           </div>
-          <div v-else class="px-4 py-8 text-center text-gray-500">
-            Henüz gönderilen ödev yok.
+
+          <!-- Modal Footer -->
+          <div
+            class="sticky bottom-0 bg-white px-6 py-4 border-t border-gray-200 rounded-b-xl flex justify-end"
+          >
+            <button
+              @click="compareSubmissions"
+              :disabled="currentSubmissions.length < 2"
+              class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg
+                class="w-5 h-5 inline mr-2 -mt-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                ></path>
+              </svg>
+              Karşılaştır
+            </button>
+          </div>
+
+          <!-- Comparison Success Modal -->
+          <div
+            v-if="isComparisonSuccess"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          >
+            <div
+              class="bg-white rounded-xl shadow-xl w-11/12 md:w-1/2 lg:w-1/3 p-6 text-center"
+            >
+              <div
+                class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100"
+              >
+                <svg
+                  class="h-6 w-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="mt-3 text-lg font-medium text-gray-900">
+                Karşılaştırma Tamamlandı
+              </h3>
+              <p class="mt-2 text-sm text-gray-500">
+                Ödevler başarıyla karşılaştırıldı ve sonuçlar kaydedildi.
+              </p>
+              <div class="mt-4">
+                <button
+                  @click="isComparisonSuccess = false"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  Tamam
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -596,8 +855,24 @@ export default {
         (similarity) => similarity.benzerlikOrani * 100 >= this.minSimilarity
       );
     },
+    
   },
   methods: {
+    setSimilarityPreset(value) {
+      this.minSimilarity = value;
+      this.updateSimilarityFilter();
+    },
+
+    updateSimilarityFilter() {
+      // Filtreleme işlemleri burada yapılabilir
+      // Örneğin API'ye yeni istek atılabilir veya yerel veri filtrelenebilir
+      console.log("Filtre güncellendi:", this.minSimilarity);
+    },
+    viewDetails(similarity) {
+      // Detayları görüntüleme işlemi
+      console.log("Detaylar:", similarity);
+      // Detay modalını açabilir veya yönlendirme yapabilirsiniz
+    },
     async fetchAssignments() {
       try {
         this.isLoading = true; // Loading başlat
@@ -840,6 +1115,13 @@ export default {
         this.isLoading = false;
       }
     },
+    isDeadlinePassed(deadline) {
+      return new Date(deadline) < new Date();
+    },
+    daysPassed(deadline) {
+      const diffTime = new Date() - new Date(deadline);
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    },
 
     viewFile(submission) {
       const fileUrl = `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`;
@@ -860,7 +1142,19 @@ export default {
 </script>
 
 <style>
-/* Modal Stili */
+
+btn-edit {
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors;
+}
+.btn-delete {
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 transition-colors;
+}
+.btn-submissions {
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 transition-colors;
+}
+.btn-similarity {
+  @apply flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 transition-colors shadow-sm;
+}
 .tooltip {
   visibility: hidden;
   min-width: 120px;
@@ -898,6 +1192,7 @@ export default {
   visibility: visible;
   opacity: 1;
 }
+
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
