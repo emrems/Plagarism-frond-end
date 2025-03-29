@@ -198,6 +198,149 @@
                   >
                     Gönderilen Ödevler
                   </button>
+
+                  <div>
+                    <!-- Buton -->
+                    <button
+                      @click="openModel(assignment.icerikId)"
+                      class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-400 to-teal-500 hover:bg-green-600 transition duration-300"
+                    >
+                      Benzerlik Sonuçlarını Görüntüle
+                    </button>
+
+                    <!-- Modal -->
+                    <VDialog
+                      v-model="similaritymodalOpen"
+                      persistent
+                      max-width="800px"
+                    >
+                      <VCard
+                        class="shadow-lg rounded-lg border border-gray-300 p-5"
+                      >
+                        <VCardTitle
+                          class="text-2xl font-bold text-center text-gray-800 mb-4"
+                        >
+                          Benzerlik Sonuçları
+                        </VCardTitle>
+
+                        <VCardText>
+                          <!-- Filtreleme Alanı (Input Box ile) -->
+                          <div
+                            class="flex items-center justify-between mb-4 p-2 bg-gray-100 rounded-lg"
+                          >
+                            <label
+                              for="similarityFilter"
+                              class="text-gray-700 font-medium"
+                            >
+                              Min. Benzerlik Oranı (%):
+                            </label>
+                            <input
+                              id="similarityFilter"
+                              v-model="minSimilarity"
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              class="w-1/3 px-2 py-1 border rounded-md focus:outline-none"
+                              placeholder="0"
+                            />
+                            <span class="text-gray-800 font-semibold"
+                              >{{ minSimilarity }}%</span
+                            >
+                          </div>
+
+                          <!-- Başlıklar -->
+                          <div
+                            class="grid grid-cols-5 gap-4 items-center bg-gray-100 py-2 px-4 rounded-md text-gray-700 font-semibold"
+                          >
+                            <div>Dosya 1</div>
+                            <div class="text-center">➝</div>
+                            <div>Dosya 2</div>
+                            <div class="text-center">Benzerlik</div>
+                            <div class="text-right">İnceleme</div>
+                          </div>
+
+                          <!-- Filtrelenmiş Sonuçlar -->
+                          <div v-if="filteredSimilarityData.length > 0">
+                            <div
+                              v-for="(
+                                similarity, index
+                              ) in filteredSimilarityData"
+                              :key="index"
+                              class="grid grid-cols-5 gap-4 items-center border-b py-3 px-4 hover:bg-gray-50 transition duration-300"
+                            >
+                              <!-- Dosya 1 -->
+                              <div class="flex items-center space-x-2">
+                                <v-icon
+                                  class="fa fa-file text-blue-600"
+                                ></v-icon>
+                                <span class="text-gray-700 truncate">{{
+                                  similarity.ilkKullaniciAdi
+                                }}</span>
+                              </div>
+
+                              <!-- Ok İşareti -->
+                              <div class="text-center text-gray-600">➝</div>
+
+                              <!-- Dosya 2 -->
+                              <div class="flex items-center space-x-2">
+                                <v-icon
+                                  class="fa fa-file text-blue-600"
+                                ></v-icon>
+                                <span class="text-gray-700 truncate">{{
+                                  similarity.ikinciKullaniciAdi
+                                }}</span>
+                              </div>
+
+                              <!-- Benzerlik Oranı -->
+                              <div
+                                class="flex items-center justify-center space-x-2"
+                              >
+                                <v-icon
+                                  class="fa fa-chart-bar text-green-600"
+                                ></v-icon>
+                                <span
+                                  class="bg-green-100 text-green-800 text-sm font-semibold px-2 py-1 rounded-md"
+                                >
+                                  {{
+                                    (similarity.benzerlikOrani * 100).toFixed(
+                                      2
+                                    )
+                                  }}%
+                                </span>
+                              </div>
+
+                              <!-- Detaylı İnceleme Butonu -->
+                              <div class="text-right">
+                                <button
+                                  @click="viewDetails(similarity)"
+                                  class="inline-flex items-center px-3 py-1.5 text-white text-sm font-medium rounded-md transition duration-300 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 hover:shadow-md"
+                                >
+                                  <v-icon
+                                    class="fa fa-eye mr-2 text-sm"
+                                  ></v-icon>
+                                  İncele
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <p v-else class="text-center text-gray-500 mt-4">
+                            Eşleşen kayıt bulunamadı.
+                          </p>
+                        </VCardText>
+
+                        <VCardActions class="justify-center">
+                          <VBtn
+                            @click="closeModalSimilarityResponse"
+                            color="blue"
+                            class="px-4 py-2 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition duration-300"
+                          >
+                            Kapat
+                          </VBtn>
+                        </VCardActions>
+                      </VCard>
+                    </VDialog>
+                  </div>
                 </div>
               </div>
             </li>
@@ -351,29 +494,63 @@
 <script>
 import axios from "axios";
 
+import {
+  VDialog,
+  VCard,
+  VCardTitle,
+  VCardText,
+  VCardActions,
+  VBtn,
+  VProgressLinear,
+} from "vuetify/components";
+
 export default {
+  components: {
+    VDialog,
+    VCard,
+    VCardTitle,
+    VCardText,
+    VCardActions,
+    VBtn,
+    VProgressLinear,
+  },
   data() {
     return {
-      isLoading: false, // Loading spinner durumu
+      minSimilarity: 0,
+      similaritymodalOpen: false,
+      similarityData: [], 
+      isLoading: false, 
       isComparisonSuccess: false, // Karşılaştırma başarılı mı?
-      successMessage: "", // Başarı mesajı
-      assignments: [], // Ödevler listesi
+      successMessage: "", 
+      assignments: [], 
       newAssignment: {
         title: "",
         description: "",
-        startDate: "", // Başlangıç tarihi
+        startDate: "",
         deadline: "",
       },
-      error: "", // Hata mesajı
+      error: "", 
       isModalOpen: false, // Modal açık/kapalı durumu
       currentSubmissions: [], // Seçilen ödevin gönderimleri
       currentIcerikId: null, // Seçilen ödevin icerikId'si
     };
   },
+
   computed: {
     // Kullanıcı adını Vuex store'dan al
     userName() {
       return this.$store.getters.getUserName;
+    },
+    similarityPercentage() {
+      // 0-1 arasındaki değeri % cinsine çevirme
+      return this.similarityData[index]
+        ? Math.round(this.similarityData[index].benzerlikOrani * 100)
+        : 0;
+    },
+    filteredSimilarityData() {
+      return this.similarityData.filter(
+        (similarity) => similarity.benzerlikOrani * 100 >= this.minSimilarity
+      );
     },
   },
   methods: {
@@ -410,6 +587,11 @@ export default {
       } finally {
         this.isLoading = false; // Loading durdur
       }
+    },
+    closeModalSimilarityResponse() {
+      this.similaritymodalOpen = false;
+      this.similarityData = []; // Modal kapatıldığında verileri temizle
+      this.minSimilarity = 0;
     },
 
     async openSubmissionModal(icerikId) {
@@ -475,6 +657,34 @@ export default {
       } catch (error) {
         console.error("Karşılaştırma hatası:", error);
         this.error = "Karşılaştırma sırasında bir hata oluştu.";
+      } finally {
+        this.isLoading = false; // Loading durdur
+      }
+    },
+    async openModel(icerikId) {
+      try {
+        const response = await axios.get(
+          `https://localhost:7057/api/BenzerlikSonuclari/icerik/${icerikId}`,
+          {
+            headers: { Authorization: `Bearer ${this.$store.state.token}` },
+          }
+        );
+        if (response.status === 200) {
+          console.log("Benzerlik sonuçları alındı:", response.data);
+          this.similarityData = Array.isArray(response.data)
+            ? response.data
+            : [];
+          this.similaritymodalOpen = true;
+        } else {
+          console.error(
+            "Benzerlik sonuçları alınamadı. Status:",
+            response.status
+          );
+          this.error = "Benzerlik sonuçları alınamadı.";
+        }
+      } catch (error) {
+        console.error("Benzerlik sonuçları alınamadı:", error);
+        this.error = "Benzerlik sonuçları alınamadı. Lütfen tekrar deneyin.";
       } finally {
         this.isLoading = false; // Loading durdur
       }
