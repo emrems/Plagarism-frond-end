@@ -300,26 +300,40 @@
                               class="grid grid-cols-5 gap-4 items-center border-b py-3 px-4 hover:bg-gray-50 transition duration-300"
                             >
                               <!-- Dosya 1 -->
-                              <div class="flex items-center space-x-2">
+                              <div
+                                class="flex items-center space-x-2 relative group"
+                              >
                                 <v-icon
                                   class="fa fa-file text-blue-600"
                                 ></v-icon>
-                                <span class="text-gray-700 truncate">{{
-                                  similarity.ilkKullaniciAdi
-                                }}</span>
+                                <span
+                                  class="text-gray-700 truncate cursor-default"
+                                >
+                                  {{ similarity.ilkKullaniciAdiSoyad }}
+                                  <div class="tooltip">
+                                    {{ similarity.ilkKullaniciAdiSoyad }}
+                                  </div>
+                                </span>
                               </div>
 
                               <!-- Ok İşareti -->
                               <div class="text-center text-gray-600">➝</div>
 
                               <!-- Dosya 2 -->
-                              <div class="flex items-center space-x-2">
+                              <div
+                                class="flex items-center space-x-2 relative group"
+                              >
                                 <v-icon
                                   class="fa fa-file text-blue-600"
                                 ></v-icon>
-                                <span class="text-gray-700 truncate">{{
-                                  similarity.ikinciKullaniciAdi
-                                }}</span>
+                                <span
+                                  class="text-gray-700 truncate cursor-default"
+                                >
+                                  {{ similarity.ikinciKullaniciAdiSoyad }}
+                                  <div class="tooltip">
+                                    {{ similarity.ikinciKullaniciAdiSoyad }}
+                                  </div>
+                                </span>
                               </div>
 
                               <!-- Benzerlik Oranı -->
@@ -847,6 +861,43 @@ export default {
 
 <style>
 /* Modal Stili */
+.tooltip {
+  visibility: hidden;
+  min-width: 120px;
+  max-width: 300px;
+  background-color: #374151;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #374151 transparent transparent transparent;
+}
+
+.group:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
