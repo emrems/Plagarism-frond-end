@@ -1,15 +1,70 @@
 <template>
   <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">Öğretmen Paneli</h1>
       <!-- Font Awesome CDN -->
       <link
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
         rel="stylesheet"
       />
+      <div class="announcement-container mb-4">
+        <!-- Duyuru Oluştur Butonu -->
+        <button
+          @click="showModalNotification = true"
+          class="announcement-button"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+            class="mr-1"
+          >
+            <path
+              d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"
+            />
+          </svg>
+          Duyuru Oluştur
+        </button>
 
+        <!-- Modal -->
+        <div v-if="showModalNotification" class="modal-overlay">
+          <div class="modal-card">
+            <div class="modal-header">
+              <h2 class="modal-title">Yeni Duyuru</h2>
+              <button
+                @click="showModalNotification = false"
+                class="close-button"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <textarea
+                v-model="duyuru.Mesaj"
+                placeholder="Duyuru mesajınızı buraya yazın..."
+                class="message-input"
+                rows="5"
+              ></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button @click="submitDuyuru" class="submit-button">
+                Yayınla
+              </button>
+              <button
+                @click="showModalNotification = false"
+                class="cancel-button"
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div
-        class="absolute top-4 right-4 flex items-center gap-4 bg-white p-2 rounded-lg shadow-md"
+        class="absolute top-4 right-4 flex items-center gap-4 bg-white p-2 rounded-lg shadow-md mt-3"
       >
         <div class="flex items-center gap-2">
           <!-- Font Awesome kullanıcı ikonu -->
@@ -38,12 +93,51 @@
       </div>
 
       <!-- Hata Mesajı -->
-      <div
-        v-if="error"
-        class="mb-4 p-4 text-red-700 bg-red-100 border border-red-400 rounded-lg"
-      >
-        {{ error }}
-      </div>
+      <!-- Error Toast Notification -->
+      <transition name="slide-fade">
+        <div
+          v-if="error"
+          class="fixed bottom-8 right-8 flex items-start p-4 pr-10 max-w-sm bg-white rounded-lg shadow-lg border-l-4 border-red-500 z-50 notification-toast error"
+        >
+          <div class="flex-shrink-0">
+            <svg
+              class="h-6 w-6 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Hata oluştu!</h3>
+            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+          </div>
+          <button
+            @click="error = ''"
+            class="absolute top-2 right-2 text-red-400 hover:text-red-600"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </transition>
 
       <!-- Yeni Ödev Oluşturma Formu -->
       <div class="container">
@@ -115,6 +209,7 @@
           </form>
         </div>
       </div>
+
       <!-- Başarı Mesajı Modal -->
       <div
         v-if="successMessage"
@@ -203,9 +298,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                Teslim süresi doldu ({{
-                  daysPassed(assignment.bitisTarihi)
-                }}
+                Teslim süresi doldu ({{ daysPassed(assignment.bitisTarihi) }}
                 gün önce)
               </div>
 
@@ -821,6 +914,11 @@ export default {
   },
   data() {
     return {
+      showModalNotification: false,
+      duyuru: {
+        Mesaj: "",
+        OlusturmaTarihi: new Date().toISOString(),
+      },
       minSimilarity: 0,
       similaritymodalOpen: false,
       similarityData: [],
@@ -835,10 +933,15 @@ export default {
         deadline: "",
       },
       error: "",
+      errorTimeout: null,
       isModalOpen: false, // Modal açık/kapalı durumu
       currentSubmissions: [], // Seçilen ödevin gönderimleri
       currentIcerikId: null, // Seçilen ödevin icerikId'si
     };
+  },
+  beforeDestroy() {
+    // Component yok edilirken timeout'u temizle
+    clearTimeout(this.errorTimeout);
   },
 
   computed: {
@@ -859,6 +962,78 @@ export default {
     },
   },
   methods: {
+    triggerError() {
+      this.error = "Bir hata oluştu. Lütfen tekrar deneyin.";
+    },
+
+    async submitDuyuru() {
+      try {
+        // Loading state'i aktif et
+        this.isSubmitting = true;
+
+        const response = await axios.post(
+          "https://localhost:7057/api/bildirim/create",
+          this.duyuru,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        // Başarılı bildirim göster
+        this.showNotification({
+          type: "success",
+          title: "Başarılı",
+          message: "Duyuru başarıyla yayınlandı!",
+          duration: 3000,
+        });
+
+        // Formu temizle ve modal'ı kapat
+        this.showModalNotification = false;
+        this.duyuru.Mesaj = "";
+      } catch (error) {
+        // Hata bildirimi göster
+        const errorMessage =
+          error.response?.data?.message || "Duyuru eklenirken bir hata oluştu";
+
+        this.showNotification({
+          type: "error",
+          title: "Hata",
+          message: errorMessage,
+          duration: 5000,
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+    showNotification(notification) {
+      const toast = document.createElement("div");
+      toast.className = `notification-toast ${notification.type}`;
+      toast.innerHTML = `
+      <div class="notification-header">
+        <span class="notification-title">${notification.title}</span>
+        <button class="notification-close">&times;</button>
+      </div>
+      <div class="notification-body">${notification.message}</div>
+    `;
+
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 300);
+      }, notification.duration);
+
+      toast
+        .querySelector(".notification-close")
+        .addEventListener("click", () => {
+          toast.classList.add("fade-out");
+          setTimeout(() => toast.remove(), 300);
+        });
+    },
+
     setSimilarityPreset(value) {
       this.minSimilarity = value;
       this.updateSimilarityFilter();
@@ -869,10 +1044,50 @@ export default {
       // Örneğin API'ye yeni istek atılabilir veya yerel veri filtrelenebilir
       console.log("Filtre güncellendi:", this.minSimilarity);
     },
-    viewDetails(similarity) {
-      // Detayları görüntüleme işlemi
-      console.log("Detaylar:", similarity);
-      // Detay modalını açabilir veya yönlendirme yapabilirsiniz
+    async viewDetails(similarity) {
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:5000/compare2file",
+          {
+            file1_path: similarity.ilkDosyaCleanPath,
+            file2_path: similarity.ikinciDosyaCleanPath,
+            similarity_score: similarity.benzerlikOrani,
+          },
+          {
+            headers: { Authorization: `Bearer ${this.$store.state.token}` },
+          }
+        );
+
+        if (response.status === 200) {
+          // this.similarityData = response.data;
+          console.log("Benzerlik detayları alındı:", response.data);
+        } else {
+          console.error("Beklenmeyen durum kodu:", response.status);
+          this.error = "Beklenmeyen bir yanıt alındı.";
+        }
+
+        console.log("Detaylar:", similarity);
+      } catch (error) {
+        console.error("Benzerlik detayları alınırken hata oluştu:", error);
+
+        if (error.response) {
+          // Sunucudan hata yanıtı alındı
+          console.error(
+            "Sunucu hatası:",
+            error.response.status,
+            error.response.data
+          );
+          this.error = `Sunucu hatası: ${error.response.status}`;
+        } else if (error.request) {
+          // İstek yapıldı ama yanıt alınamadı
+          console.error("Yanıt alınamadı:", error.request);
+          this.error = "Sunucudan yanıt alınamadı";
+        } else {
+          // İstek oluşturulurken hata oluştu
+          console.error("İstek hatası:", error.message);
+          this.error = "İstek oluşturulurken hata oluştu";
+        }
+      }
     },
     async fetchAssignments() {
       try {
@@ -1134,9 +1349,23 @@ export default {
       return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     },
 
-    viewFile(submission) {
-      const fileUrl = `https://localhost:7057/api/Dosya/download/${submission.dosyaId}`;
-      window.open(fileUrl, "_blank");
+    async viewFile(submission) {
+      try {
+        this.isLoading = true;
+        // Token'ı query parametresi olarak eklendi
+        const token = this.$store.state.token;
+        const url = `https://localhost:7057/api/Dosya/view/${
+          submission.dosyaId
+        }?token=${encodeURIComponent(token)}`;
+
+        // Yeni sekmede aç
+        window.open(url, "_blank");
+      } catch (error) {
+        console.error("Dosya görüntüleme hatası:", error);
+        this.$toast.error("Dosya görüntülenirken hata oluştu");
+      } finally {
+        this.isLoading = false;
+      }
     },
     closeSuccessMessage() {
       this.successMessage = "";
@@ -1148,6 +1377,19 @@ export default {
   },
   mounted() {
     this.fetchAssignments();
+  },
+  watch: {
+    error(newVal) {
+      if (newVal) {
+        // Yeni hata mesajı geldiğinde önceki timeout'u temizle
+        clearTimeout(this.errorTimeout);
+
+        // 5 saniye sonra otomatik kapat
+        this.errorTimeout = setTimeout(() => {
+          this.error = "";
+        }, 5000);
+      }
+    },
   },
 };
 </script>
@@ -1512,5 +1754,242 @@ textarea {
   .lg\:w-1\/2 {
     width: 50%;
   }
+}
+
+.announcement-container {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.announcement-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.announcement-button:hover {
+  background-color: #4338ca;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: white;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #111827;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0 8px;
+}
+
+.close-button:hover {
+  color: #4b5563;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.message-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.submit-button {
+  padding: 8px 16px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #4338ca;
+}
+
+.cancel-button {
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.notification-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transform: translateX(0);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.notification-toast.success {
+  background: #f0fdf4;
+  border-left: 4px solid #10b981;
+  color: #065f46;
+}
+
+.notification-toast.error {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+.notification-body {
+  font-size: 14px;
+}
+
+.fade-out {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+/* Loading indicator */
+.is-submitting {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.is-submitting::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+/* Toast stilleri */
+.notification-toast {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.notification-toast.error {
+  background-color: #fef2f2;
+  border-left-color: #ef4444;
 }
 </style>

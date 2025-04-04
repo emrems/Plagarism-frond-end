@@ -23,6 +23,89 @@
           <h2 class="font-semibold text-xl text-gray-800">EduPortal</h2>
         </div>
         <div class="flex items-center gap-6">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button
+              @click="toggleNotifications"
+              class="p-1 text-gray-600 hover:text-indigo-600 transition-colors relative"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+              <span
+                v-if="notifications.length > 0"
+                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+              >
+                {{ notifications.length }}
+              </span>
+            </button>
+
+            <!-- Notification Dropdown -->
+            <div
+              v-if="showNotificationDropdown"
+              class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200"
+            >
+              <div class="py-1">
+                <div
+                  class="px-4 py-2 border-b border-gray-100 bg-gray-50 flex justify-between items-center"
+                >
+                  <h3 class="text-sm font-medium text-gray-800">Bildirimler</h3>
+                  <span class="text-xs text-gray-500"
+                    >{{ notifications.length }} yeni</span
+                  >
+                </div>
+
+                <div
+                  v-if="notifications.length === 0"
+                  class="px-4 py-3 text-center text-sm text-gray-500"
+                >
+                  Bildirim yok
+                </div>
+
+                <div v-else class="max-h-96 overflow-y-auto">
+                  <div
+                    v-for="(notification, index) in notifications"
+                    :key="notification.bildirimId"
+                    class="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-800">
+                          {{ notification.kullaniciAdi }}
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                          {{ notification.mesaj }}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1">
+                          {{
+                            formatNotificationDate(notification.olusturmaTarihi)
+                          }}
+                        </p>
+                      </div>
+                      <button
+                        @click.stop="markAsRead(notification.bildirimId)"
+                        class="ml-2 text-xs text-indigo-600 hover:text-indigo-800"
+                      >
+                        Okudum
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="flex items-center space-x-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -60,6 +143,7 @@
       </div>
     </div>
 
+    <!-- Rest of your template remains exactly the same -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 class="text-3xl font-bold text-gray-900 mb-1 text-center">
         Öğrenci Paneli
@@ -377,15 +461,18 @@
 
 <script>
 import axios from "axios";
+import { mapGetters } from "vuex";
 
 export default {
   data() {
     return {
       assignments: [],
+      notifications: [],
       uploadedFiles: {},
       showToast: false,
       timeIntervals: {},
-      assignmentCounts: {}, // Her içerik ID'si için teslim edilen dosya sayısını tutacak
+      assignmentCounts: {},
+      showNotificationDropdown: false, // Yeni eklenen bildirim açılır kutusu durumu
 
       assignmentTypes: {
         HOMEWORK: "Ödev",
@@ -403,8 +490,76 @@ export default {
     userName() {
       return this.$store.getters.getUserName;
     },
+    ...mapGetters(["userRole"]),
   },
   methods: {
+    async FetchNotifications() {
+      try {
+        const token = this.$store.state.token;
+        if (!token) {
+          throw new Error("Token bulunamadı! Lütfen giriş yapın.");
+        }
+
+        const response = await axios.get(
+          "https://localhost:7057/api/Bildirim/all",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log("Bildirimler alındı:", response.data);
+        this.notifications = response.data;
+      } catch (error) {
+        console.error("Bildirimler alınamadı:", error);
+      }
+    },
+
+    toggleNotifications() {
+      this.showNotificationDropdown = !this.showNotificationDropdown;
+      if (this.showNotificationDropdown && this.notifications.length === 0) {
+        this.FetchNotifications();
+      }
+    },
+
+    async markAsRead(bildirimId) {
+      console.log(`BildirimID: ${bildirimId}`);
+      try {
+        const token = this.$store.state.token;
+        const response = await axios.put(
+          `https://localhost:7057/api/Bildirim/mark-as-read/${bildirimId}`,
+          null,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Bildirim güncellendi:", response.data);
+          // Bildirimi ID'ye göre filtreleyerek kaldır
+          this.notifications = this.notifications.filter(
+            (n) => n.bildirimId !== bildirimId
+          );
+
+          // Eğer tüm bildirimler okunduysa dropdown'ı kapat
+          if (this.notifications.length === 0) {
+            this.showNotificationDropdown = false;
+          }
+        }
+      } catch (error) {
+        console.error("Bildirim güncellenirken hata oluştu:", error);
+      }
+    },
+
+    formatNotificationDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+
     async fetchAssignments() {
       try {
         const token = this.$store.state.token;
@@ -423,7 +578,6 @@ export default {
           assignmentType: this.determineAssignmentType(assignment),
         }));
 
-        // Tüm ödevler için dosya sayılarını paralel olarak al
         await Promise.all(
           this.assignments.map(async (assignment) => {
             await this.fetchAssignmentForIcerıkId(assignment.icerikId);
@@ -450,17 +604,10 @@ export default {
           }
         );
 
-        // Vue 3'te doğrudan atama yapabilirsiniz
         this.assignmentCounts = {
           ...this.assignmentCounts,
           [icerikID]: Array.isArray(response.data) ? response.data.length : 0,
         };
-
-        console.log("Dosya Yanıtı:", {
-          icerikID,
-          data: response.data,
-          count: Array.isArray(response.data) ? response.data.length : 0,
-        });
       } catch (error) {
         console.error(`Hata (${icerikID}):`, error);
         this.assignmentCounts = {
@@ -533,7 +680,6 @@ export default {
         console.log("Dosya başarıyla yüklendi:", response.data);
         this.showToast = true;
 
-        // Dosya gönderildikten sonra teslim sayısını güncelle
         await this.fetchAssignmentForIcerıkId(icerikId);
 
         setTimeout(() => {
@@ -618,13 +764,14 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     },
 
-    logout() {
+    async logout() {
       this.$store.dispatch("logout");
       this.$router.push({ name: "Login" });
     },
   },
-  mounted() {
-    this.fetchAssignments();
+  async mounted() {
+    await this.fetchAssignments();
+    await this.FetchNotifications();
   },
   beforeDestroy() {
     Object.values(this.timeIntervals).forEach(clearInterval);
@@ -658,5 +805,19 @@ export default {
   .grid {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
+}
+
+/* Notification dropdown styles */
+.notification-dropdown {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: #f9fafb;
 }
 </style>
