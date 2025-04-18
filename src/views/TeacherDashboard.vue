@@ -460,15 +460,15 @@
                 <!-- İşlem Butonları -->
                 <div class="flex flex-wrap gap-2 justify-end">
                   <button
-                    @click="
-                        editAssignment(assignment)
-                    "
+                    @click="editAssignment(assignment)"
                     :class="{
-    'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors': true,
-    'text-indigo-700 bg-indigo-50 hover:bg-indigo-100': isAssignmentEditable(assignment),
-    'text-indigo-400 bg-indigo-50 cursor-not-allowed': !isAssignmentEditable(assignment)
-  }"
-  :disabled="!isAssignmentEditable(assignment)"
+                      'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors': true,
+                      'text-indigo-700 bg-indigo-50 hover:bg-indigo-100':
+                        isAssignmentEditable(assignment),
+                      'text-indigo-400 bg-indigo-50 cursor-not-allowed':
+                        !isAssignmentEditable(assignment),
+                    }"
+                    :disabled="!isAssignmentEditable(assignment)"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -486,6 +486,58 @@
                     </svg>
                     Düzenle
                   </button>
+                  <!-- Düzenleme Modalı -->
+                  <div v-if="isEditModalOpen" class="modal-overlay">
+                    <div class="modal-card">
+                      <div class="modal-header">
+                        <h3 class="modal-title">Ödev Düzenle</h3>
+                        <button class="close-button" @click="closeEditModal">
+                          &times;
+                        </button>
+                      </div>
+
+                      <div class="modal-body">
+                        <div class="form-group">
+                          <label>Başlık</label>
+                          <input
+                            v-model="editData.Baslik"
+                            type="text"
+                            class="message-input"
+                          />
+                        </div>
+
+                        <div class="form-group">
+                          <label>Açıklama</label>
+                          <textarea
+                            v-model="editData.Aciklama"
+                            class="message-input"
+                          ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                          <label>Bitiş Tarihi</label>
+                          <input
+                            v-model="editData.BitisTarihi"
+                            type="datetime-local"
+                            class="message-input"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="modal-footer">
+                        <button @click="closeEditModal" class="cancel-button">
+                          İptal
+                        </button>
+                        <button
+                          @click="updateAssignment(assignment.Baslik)"
+                          class="submit-button"
+                          :class="{ 'is-submitting': isLoading }"
+                        >
+                          <span v-if="!isLoading">Kaydet</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   <button
                     @click="deleteAssignment(assignment.id)"
@@ -1005,6 +1057,15 @@ export default {
   },
   data() {
     return {
+      // Düzenleme modalı için yeni eklenenler
+      isEditModalOpen: false,
+      editData: {
+        Baslik: "",
+        Aciklama: "",
+        BitisTarihi: "",
+      },
+      currentAssignmentId: null,
+      isSubmitting: false,
       assignmentType: "", // kod tabanlı mı temel tabanlı mı
       showProgrammingLanguages: false,
       showModalNotification: false,
@@ -1406,7 +1467,127 @@ export default {
     },
 
     editAssignment(assignment) {
-      console.log("Edit assignment:", assignment);
+      console.log("Atanan ödev verisi:", assignment);
+      this.currentAssignmentId = assignment.icerikId;
+      this.editData = {
+        Baslik: assignment.baslik,
+        Aciklama: assignment.aciklama,
+        BitisTarihi: this.formatDateForInput(assignment.bitisTarihi),
+      };
+      this.isEditModalOpen = true;
+    },
+    formatDateForInput(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      // Timezone düzeltmesi yapıyoruz
+      const offset = date.getTimezoneOffset() * 60000;
+      const localISOTime = new Date(date.getTime() - offset).toISOString();
+      return localISOTime.slice(0, 16);
+    },
+    closeEditModal() {
+      this.isEditModalOpen = false;
+      this.resetEditData();
+    },
+    resetEditData() {
+      this.editData = {
+        Baslik: "",
+        Aciklama: "",
+        BitisTarihi: "",
+      };
+      this.currentAssignmentId = null;
+    },
+    async updateAssignment() {
+      if (this.isSubmitting) return;
+
+      this.isSubmitting = true;
+      this.isLoading = true;
+
+      try {
+        const updateDto = {
+          Baslik: this.editData.Baslik,
+          Aciklama: this.editData.Aciklama,
+          BitisTarihi: new Date(this.editData.BitisTarihi).toISOString(),
+        };
+
+        const response = await axios.put(
+          `https://localhost:7057/api/Icerik/${this.currentAssignmentId}`,
+          updateDto,
+          {
+            headers: {
+              Authorization: `Bearer ${this.$store.state.token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const originalAssignment = this.assignments.find(
+          (a) => a.icerikId === this.currentAssignmentId
+        );
+        const updatedAssignment = {
+          ...originalAssignment,
+          baslik: updateDto.Baslik,
+          aciklama: updateDto.Aciklama,
+          bitisTarihi: updateDto.BitisTarihi,
+        };
+
+        this.assignments = this.assignments.map((a) =>
+          a.icerikId === this.currentAssignmentId ? updatedAssignment : a
+        );
+
+        this.closeEditModal();
+        console.log("Duyuru mesajı atanıyor:", originalAssignment.baslik); // Kontrol
+        this.duyuru.Mesaj = `"${originalAssignment.baslik}" başlıklı ödev güncellendi!`;
+        this.showModalNotification = true;
+      } catch (error) {
+        console.error("Güncelleme hatası:", error);
+        this.handleApiError(error);
+      } finally {
+        this.isSubmitting = false;
+        this.isLoading = false;
+      }
+    },
+
+    handleApiError(error) {
+      if (error.response) {
+        const message = error.response.data?.message || "Bir hata oluştu";
+        if (error.response.status === 400) {
+          this.showErrorNotification(`Geçersiz istek: ${message}`);
+        } else if (error.response.status === 404) {
+          this.showErrorNotification("Ödev bulunamadı");
+        } else {
+          this.showErrorNotification(`Sunucu hatası: ${message}`);
+        }
+      } else if (error.request) {
+        this.showErrorNotification("Sunucuya ulaşılamadı");
+      } else {
+        this.showErrorNotification(`İstek hatası: ${error.message}`);
+      }
+    },
+    showSuccessNotification(message) {
+      this.showModalNotification = true;
+      this.duyuru = {
+        Mesaj: message,
+        OlusturmaTarihi: new Date().toISOString(),
+      };
+      this.isComparisonSuccess = true;
+
+      // 3 saniye sonra otomatik kapat
+      setTimeout(() => {
+        this.showModalNotification = false;
+      }, 5000);
+    },
+    showErrorNotification(message) {
+      this.showModalNotification = true;
+      this.duyuru = {
+        Mesaj: message,
+        OlusturmaTarihi: new Date().toISOString(),
+      };
+      this.isComparisonSuccess = false;
+
+      // 5 saniye sonra otomatik kapat
+      setTimeout(() => {
+        this.showModalNotification = false;
+      }, 5000);
     },
 
     async deleteAssignment(id) {
