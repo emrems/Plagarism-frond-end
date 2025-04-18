@@ -318,7 +318,6 @@
                   @change="
                     ($event) => fileSelected($event, assignment.icerikId)
                   "
-                  accept=".pdf,.docx"
                 />
                 <label
                   :for="'file-upload-' + assignment.icerikId"
@@ -649,6 +648,11 @@ export default {
       const assignment = this.assignments.find(
         (assignment) => assignment.icerikId === icerikId
       );
+      if (!assignment) {
+        alert("İlgili ödev bulunamadı.");
+        return;
+      }
+
       if (assignment.deadlinePassed) {
         alert("Ödev teslim tarihi geçtiği için dosya gönderilemez.");
         return;
@@ -664,6 +668,9 @@ export default {
         const formData = new FormData();
         formData.append("user_id", this.$store.getters.userId);
         formData.append("content_id", icerikId);
+        formData.append("baslik", assignment.baslik); 
+        formData.append("ad_soyad", this.$store.state.userName);
+        formData.append("icerik_turu", assignment.icerikTuru);  
         formData.append("file", file);
 
         const response = await axios.post(
@@ -676,24 +683,13 @@ export default {
             },
           }
         );
-
         console.log("Dosya başarıyla yüklendi:", response.data);
-        this.showToast = true;
-
-        await this.fetchAssignmentForIcerıkId(icerikId);
-
-        setTimeout(() => {
-          this.showToast = false;
-        }, 3000);
-
-        const newUploadedFiles = { ...this.uploadedFiles };
-        delete newUploadedFiles[icerikId];
-        this.uploadedFiles = newUploadedFiles;
-
-        document.getElementById("file-upload-" + icerikId).value = "";
+        alert("Dosya başarıyla yüklendi!");
+        // Başarılı yükleme sonrası yapılacak işlemler (örneğin, uploadedFiles dizisini temizleme)
+        this.uploadedFiles[icerikId] = null;
       } catch (error) {
-        console.error("Dosya yükleme hatası:", error);
-        alert("Dosya yüklenirken hata oluştu.");
+        console.error("Dosya yüklenirken bir hata oluştu:", error);
+        alert("Dosya yüklenirken bir hata oluştu.");
       }
     },
 

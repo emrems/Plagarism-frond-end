@@ -93,7 +93,6 @@
       </div>
 
       <!-- Hata Mesajı -->
-      <!-- Error Toast Notification -->
       <transition name="slide-fade">
         <div
           v-if="error"
@@ -166,6 +165,88 @@
                 required
                 placeholder="Ödev detaylarını buraya yazın..."
               ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="assignmentType">Ödev Tipi</label>
+              <select
+                id="assignmentType"
+                v-model="assignmentType"
+                required
+                @change="updateProgrammingLanguageOptions"
+                style="
+                  display: block;
+                  width: 100%;
+                  padding: 8px;
+                  font-size: 1em;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                  margin-bottom: 10px;
+                "
+              >
+                <option value="" disabled selected>
+                  Ne tür bir ödev yüklemek istersiniz?
+                </option>
+                <option value="text">Text Tabanlı Ödev</option>
+                <option value="code">Kod Tabanlı Ödev</option>
+              </select>
+            </div>
+            <div class="form-group" v-if="showProgrammingLanguages">
+              <label for="programmingLanguage">Programlama Dili</label>
+              <select
+                id="programmingLanguage"
+                v-model="newAssignment.programmingLanguage"
+                required
+                style="
+                  display: block;
+                  width: 100%;
+                  padding: 8px;
+                  font-size: 1em;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                  margin-bottom: 10px;
+                "
+              >
+                <option value="" disabled selected>
+                  Ödev için bir dil seçiniz
+                </option>
+                <option value="java">Java</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="csharp">C#</option>
+                <option value="python3">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+              </select>
+            </div>
+
+            <div class="form-group" v-if="assignmentType === 'text'">
+              <label for="textFormat">Metin Formatı</label>
+              <select
+                id="textFormat"
+                v-model="newAssignment.programmingLanguage"
+                required
+                style="
+                  display: block;
+                  width: 100%;
+                  padding: 8px;
+                  font-size: 1em;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                  margin-bottom: 10px;
+                "
+              >
+                <option value="" disabled selected>
+                  Metin formatını seçiniz
+                </option>
+                <option value="text">Düz Metin (.txt)</option>
+                <option value="pdf">PDF (.pdf)</option>
+                <option value="doc">Word Belgesi (.doc)</option>
+                <option value="docx">Word Belgesi (.docx)</option>
+              </select>
             </div>
 
             <div class="form-group date-inputs">
@@ -378,7 +459,17 @@
 
                 <!-- İşlem Butonları -->
                 <div class="flex flex-wrap gap-2 justify-end">
-                  <button @click="editAssignment(assignment)" class="btn-edit">
+                  <button
+                    @click="
+                        editAssignment(assignment)
+                    "
+                    :class="{
+    'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors': true,
+    'text-indigo-700 bg-indigo-50 hover:bg-indigo-100': isAssignmentEditable(assignment),
+    'text-indigo-400 bg-indigo-50 cursor-not-allowed': !isAssignmentEditable(assignment)
+  }"
+  :disabled="!isAssignmentEditable(assignment)"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       class="h-4 w-4 mr-1"
@@ -652,7 +743,7 @@
       <!-- Gönderilen Ödevler Modal -->
       <div
         v-if="isModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-sm transition-opacity"
       >
         <div
           class="bg-white rounded-xl shadow-xl w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 max-h-[90vh] flex flex-col"
@@ -914,6 +1005,8 @@ export default {
   },
   data() {
     return {
+      assignmentType: "", // kod tabanlı mı temel tabanlı mı
+      showProgrammingLanguages: false,
       showModalNotification: false,
       duyuru: {
         Mesaj: "",
@@ -931,6 +1024,7 @@ export default {
         description: "",
         startDate: "",
         deadline: "",
+        programmingLanguage: "",
       },
       error: "",
       errorTimeout: null,
@@ -962,6 +1056,19 @@ export default {
     },
   },
   methods: {
+    isAssignmentEditable(assignment) {
+      const deadline = new Date(assignment.bitisTarihi); // Ödev bitiş tarihi
+      const now = new Date();
+      return now < deadline; // Tarih geçmemişse `true`
+    },
+    updateProgrammingLanguageOptions() {
+      this.showProgrammingLanguages = this.assignmentType === "code";
+      if (this.assignmentType === "text") {
+        this.newAssignment.programmingLanguage = "text";
+      } else {
+        this.newAssignment.programmingLanguage = ""; // Kod seçildiğinde programlama dili seçeneğini sıfırlama
+      }
+    },
     triggerError() {
       this.error = "Bir hata oluştu. Lütfen tekrar deneyin.";
     },
@@ -1240,7 +1347,8 @@ export default {
         !this.newAssignment.title ||
         !this.newAssignment.description ||
         !this.newAssignment.startDate ||
-        !this.newAssignment.deadline
+        !this.newAssignment.deadline ||
+        !this.newAssignment.programmingLanguage
       ) {
         alert("Tüm alanları doldurduğunuzdan emin olun.");
         return;
@@ -1267,6 +1375,7 @@ export default {
             Aciklama: this.newAssignment.description,
             OlusturmaTarihi: formattedStartDate,
             BitisTarihi: formattedDeadline,
+            IcerikTuru: this.newAssignment.programmingLanguage,
           },
           {
             headers: {
@@ -1282,6 +1391,7 @@ export default {
             description: "",
             startDate: "",
             deadline: "",
+            programmingLanguage: "",
           };
           this.successMessage = "Başarıyla ödev oluşturuldu!"; // Başarı mesajı
           this.fetchAssignments();
@@ -1407,6 +1517,7 @@ btn-edit {
 .btn-similarity {
   @apply flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 transition-colors shadow-sm;
 }
+
 .tooltip {
   visibility: hidden;
   min-width: 120px;
