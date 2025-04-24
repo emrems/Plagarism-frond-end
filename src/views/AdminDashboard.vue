@@ -119,10 +119,10 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900 mr-4">
+                  <button @click="openEditModal(user)" class="text-indigo-600 hover:text-indigo-900 mr-4">
                     <i class="fas fa-edit mr-1"></i> Düzenle
                   </button>
-                  <button @click="deleteUser(user.kullaniciId)" class="text-red-600 hover:text-red-900">
+                  <button @click="confirmDeleteUser(user)" class="text-red-600 hover:text-red-900">
                     <i class="fas fa-trash-alt mr-1"></i> Sil
                   </button>
                 </td>
@@ -264,6 +264,135 @@
         </div>
       </div>
     </main>
+
+    <!-- Kullanıcı Güncelleme Modalı -->
+    <div v-if="isUserUpdateModalOpen" class="fixed inset-0 overflow-y-auto z-50 animate-fade-in">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Arkaplan overlay -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div class="absolute inset-0 bg-gray-500 opacity-75" @click="closeModal"></div>
+        </div>
+
+        <!-- Modal içeriği -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                <i class="fas fa-user-edit text-indigo-600"></i>
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Kullanıcı Bilgilerini Güncelle
+                </h3>
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label for="ad" class="block text-sm font-medium text-gray-700">Ad</label>
+                    <input
+                      type="text"
+                      id="ad"
+                      v-model="editUserDto.ad"
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label for="soyad" class="block text-sm font-medium text-gray-700">Soyad</label>
+                    <input
+                      type="text"
+                      id="soyad"
+                      v-model="editUserDto.soyad"
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label for="eposta" class="block text-sm font-medium text-gray-700">E-Posta</label>
+                    <input
+                      type="email"
+                      id="eposta"
+                      v-model="editUserDto.eposta"
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label for="rol" class="block text-sm font-medium text-gray-700">Rol</label>
+                    <select
+                      id="rol"
+                      v-model="editUserDto.rol"
+                      class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    >
+                      <option value="Teacher">Öğretmen</option>
+                      <option value="Student">Öğrenci</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              @click="updateUser"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              <i class="fas fa-save mr-2"></i> Güncelle
+            </button>
+            <button
+              type="button"
+              @click="closeModal"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              <i class="fas fa-times mr-2"></i> İptal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Silme Onay Modalı -->
+    <div v-if="isDeleteConfirmationOpen" class="fixed inset-0 overflow-y-auto z-50 animate-fade-in">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Arkaplan overlay -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div class="absolute inset-0 bg-gray-500 opacity-75" @click="cancelDelete"></div>
+        </div>
+
+        <!-- Modal içeriği -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Kullanıcıyı Sil
+                </h3>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-500">
+                    <span class="font-semibold">{{ userToDelete.ad }} {{ userToDelete.soyad }}</span> adlı kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              @click="deleteUser"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              <i class="fas fa-trash-alt mr-2"></i> Sil
+            </button>
+            <button
+              type="button"
+              @click="cancelDelete"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              <i class="fas fa-times mr-2"></i> İptal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -273,6 +402,20 @@ import axios from "axios";
 export default {
   data() {
     return {
+      isUserUpdateModalOpen: false,
+      isDeleteConfirmationOpen: false,
+      editUserDto: {
+        kullaniciId: null,
+        ad: "",
+        soyad: "",
+        eposta: "",
+        rol: "Teacher",
+      },
+      userToDelete: {
+        kullaniciId: null,
+        ad: "",
+        soyad: ""
+      },
       users: [],
       allUsers: [],
       totalUsers: 0,
@@ -360,20 +503,79 @@ export default {
       const daysLeft = this.daysRemaining(deadline);
       return Math.min(100, Math.max(0, ((totalDays - daysLeft) / totalDays) * 100));
     },
-    editUser(user) {
-      console.log("Düzenlenecek kullanıcı:", user);
-      // Burada kullanıcı düzenleme modalını açabilirsiniz
+    openEditModal(user) {
+      this.editUserDto = {
+        kullaniciId: user.kullaniciId,
+        ad: user.ad,
+        soyad: user.soyad,
+        eposta: user.eposta,
+        rol: user.rol
+      };
+      this.isUserUpdateModalOpen = true;
     },
-    async deleteUser(id) {
-      if (confirm("Bu kullanıcıyı silmek istediğinize emin misiniz?")) {
-        try {
-          await axios.delete(`https://localhost:7057/api/Kullanici/${id}`);
-          this.users = this.users.filter((user) => user.kullaniciId !== id);
-          this.totalUsers = this.users.length;
-        } catch (error) {
-          console.error("Kullanıcı silinirken hata oluştu:", error);
-          alert("Kullanıcı silinirken bir hata oluştu");
-        }
+    confirmDeleteUser(user) {
+      this.userToDelete = {
+        kullaniciId: user.kullaniciId,
+        ad: user.ad,
+        soyad: user.soyad
+      };
+      this.isDeleteConfirmationOpen = true;
+    },
+    cancelDelete() {
+      this.isDeleteConfirmationOpen = false;
+      this.userToDelete = {
+        kullaniciId: null,
+        ad: "",
+        soyad: ""
+      };
+    },
+    async deleteUser() {
+      try {
+        await axios.delete(`https://localhost:7057/api/Kullanici/${this.userToDelete.kullaniciId}`);
+        this.users = this.users.filter((user) => user.kullaniciId !== this.userToDelete.kullaniciId);
+        this.totalUsers = this.users.length;
+        this.isDeleteConfirmationOpen = false;
+        
+        // Başarı bildirimi
+        this.$toast.success(`${this.userToDelete.ad} ${this.userToDelete.soyad} başarıyla silindi`, {
+          position: 'top-right',
+          duration: 3000
+        });
+      } catch (error) {
+        console.error("Kullanıcı silinirken hata oluştu:", error);
+        
+        // Hata bildirimi
+        this.$toast.error('Kullanıcı silinirken bir hata oluştu', {
+          position: 'top-right',
+          duration: 3000
+        });
+      } finally {
+        this.userToDelete = {
+          kullaniciId: null,
+          ad: "",
+          soyad: ""
+        };
+      }
+    },
+    async updateUser() {
+      try {
+        await axios.put(`https://localhost:7057/api/Kullanici/${this.editUserDto.kullaniciId}`, this.editUserDto);
+        this.fetchUsers();
+        this.closeModal();
+        
+        // Başarı bildirimi
+        this.$toast.success('Kullanıcı başarıyla güncellendi', {
+          position: 'top-right',
+          duration: 3000
+        });
+      } catch (error) {
+        console.error("Kullanıcı güncellenirken hata oluştu:", error);
+        
+        // Hata bildirimi
+        this.$toast.error('Kullanıcı güncellenirken bir hata oluştu', {
+          position: 'top-right',
+          duration: 3000
+        });
       }
     },
     async GetAssigmentForTeacher() {
@@ -398,6 +600,9 @@ export default {
     logout() {
       this.$store.dispatch("logout");
       this.$router.push({ name: "Login" });
+    },
+    closeModal() {
+      this.isUserUpdateModalOpen = false;
     },
   },
   async mounted() {
@@ -449,5 +654,24 @@ export default {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Toast bildirimleri için temel stil */
+.toast {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.success {
+  background-color: #10B981;
+  color: white;
+}
+
+.toast.error {
+  background-color: #EF4444;
+  color: white;
 }
 </style>

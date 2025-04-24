@@ -169,6 +169,27 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast Bildirim Sistemi -->
+    <div 
+      v-if="showToast" 
+      class="fixed bottom-4 right-4 flex items-center p-4 mb-4 space-x-3 text-green-800 bg-white rounded-lg shadow-lg border-l-4 border-green-500 animate-slide-up transform transition-all duration-300"
+      role="alert"
+    >
+      <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg">
+        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <div class="text-sm font-medium">
+        {{ toastMessage }}
+      </div>
+      <button type="button" class="ml-auto -mx-1.5 -my-1.5" @click="hideToast">
+        <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -184,7 +205,10 @@ export default {
       password: "",
       role: "Student",
       error: null,
-      loading: false
+      loading: false,
+      showToast: false,
+      toastMessage: "",
+      toastTimer: null
     };
   },
   methods: {
@@ -201,11 +225,16 @@ export default {
           Rol: this.role,
         });
 
-        // Başarılı kayıt sonrası toast mesajı gösterilebilir
-        this.$router.push({
-          name: 'Login',
-          query: { registered: 'true' }
-        });
+        // Başarılı kayıt sonrası toast bildirimini göster
+        this.showSuccessToast(`Tebrikler ${this.ad}! Hesabınız başarıyla oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...`);
+        
+        // 3 saniye sonra login sayfasına yönlendir
+        setTimeout(() => {
+          this.$router.push({
+            name: 'Login',
+            query: { registered: 'true' }
+          });
+        }, 3000);
       } catch (error) {
         this.error = error.response?.data?.errors
           ? Object.values(error.response.data.errors).flat().join(", ")
@@ -213,6 +242,27 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    // Toast bildirimini gösterme metodu
+    showSuccessToast(message) {
+      // Eğer önceki bir zamanlayıcı varsa temizle
+      if (this.toastTimer) {
+        clearTimeout(this.toastTimer);
+      }
+      
+      this.toastMessage = message;
+      this.showToast = true;
+      
+      // 5 saniye sonra toast bildirimi gizle
+      this.toastTimer = setTimeout(() => {
+        this.hideToast();
+      }, 5000);
+    },
+    
+    // Toast bildirimini gizleme metodu
+    hideToast() {
+      this.showToast = false;
     }
   }
 };
@@ -227,6 +277,16 @@ export default {
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Toast animasyonu */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
 }
 
 /* Geçişler */
