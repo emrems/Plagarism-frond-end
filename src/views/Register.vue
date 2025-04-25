@@ -279,7 +279,6 @@ export default {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Toast animasyonu */
 @keyframes slideUp {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -289,14 +288,12 @@ export default {
   animation: slideUp 0.3s ease-out forwards;
 }
 
-/* Geçişler */
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-/* Radio buton animasyonu */
 input[type="radio"]:checked + label {
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
 }
