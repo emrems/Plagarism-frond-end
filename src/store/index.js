@@ -62,7 +62,7 @@ const store = createStore({
         commit("setId", id);
         commit("setRefreshToken", refreshToken);
         commit("setUserName", userName); // Kullanıcı adını kaydet
-      } catch (error) {
+      }  catch (error) {
         console.error("Login action error:", error);
       }
     },

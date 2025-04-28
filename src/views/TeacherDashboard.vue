@@ -1215,11 +1215,13 @@ export default {
     async viewDetails(similarity) {
       try {
         const response = await axios.post(
-          "http://127.0.0.1:5000/compare2file",
+          "http://127.0.0.1:5000/compare_html",
           {
-            file1_path: similarity.ilkDosyaCleanPath,
-            file2_path: similarity.ikinciDosyaCleanPath,
-            similarity_score: similarity.benzerlikOrani,
+            KullaniciAdi1: "emre",
+            KullaniciAdi2: "ali",
+            Dosya1: similarity.ilkDosyaCleanPath,
+            Dosya2: similarity.ikinciDosyaCleanPath,
+            BenzerlikOrani: similarity.benzerlikOrani,
           },
           {
             headers: { Authorization: `Bearer ${this.$store.state.token}` },

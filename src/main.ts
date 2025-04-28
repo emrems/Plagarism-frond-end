@@ -1,17 +1,27 @@
-import { createApp } from "vue";
-import 'vuetify/dist/vuetify.min.css';
+// src/main.ts
 
-import { createPinia } from "pinia";
-import router from "./router";
+// 1. Axios interceptor’larını en başta yükleyin
+import "./plugins/axios";
+
+// 2. UI kütüphanelerinin CSS dosyalarını getir
+import "vuetify/dist/vuetify.min.css";
 import "./style.css";
+
+// 3. Vue ve Pinia/Store/Router/Vuetify import’ları
+import { createApp } from "vue";
+import { createPinia } from "pinia";
 import App from "./App.vue";
-import store from "@/store/index"; // Vuex Store
-import vuetify from '@/plugins/vuetify'; // Vuetify eklentisini çağırıyoruz
+import router from "./router";
+import store from "@/store";
+import vuetify from "@/plugins/vuetify";
 
 const app = createApp(App);
 
-app.use(createPinia());
-app.use(store); // Vuex Store'u ekledik
-app.use(router);
-app.use(vuetify);
-app.mount("#app")
+// 4. Plugin’leri sırayla kullanın
+app.use(createPinia());  // Pinia (veya Vuex store’unuz)
+app.use(store);          // Vuex Store
+app.use(router);         // Vue Router
+app.use(vuetify);        // Vuetify
+
+// 5. Uygulamayı mount edin
+app.mount("#app");

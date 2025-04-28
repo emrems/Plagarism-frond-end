@@ -1,17 +1,39 @@
+// src/router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
+import store from "@/store";
 
-import Login from "../views/Login.vue";
-import Register from "../views/Register.vue";
-import AdminDashboard from "../views/AdminDashboard.vue";
+import Login            from "../views/Login.vue";
+import Register         from "../views/Register.vue";
+import AdminDashboard   from "../views/AdminDashboard.vue";
 import TeacherDashboard from "../views/TeacherDashboard.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
-import store from "@/store/index"; // Vuex store
+
+// Basit JWT payload parse fonksiyonu
+function parseJwt(token: string): { exp?: number } {
+  try {
+    // token: header.payload.signature
+    const base64Url = token.split(".")[1];
+    // URL-safe Base64 → standart Base64
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    // atob ile payload’u elde et, URI component’e çevir
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return {};
+  }
+}
 
 const routes = [
-  // Kök rota doğrudan Login sayfasına yönlendirilir
   { path: "/", redirect: "/login" },
-  { path: "/login", name: "Login", component: Login },
-  { path: "/register", name: "Register", component: Register },
+  { path: "/login",    name: "Login",           component: Login },
+  { path: "/register", name: "Register",        component: Register },
   {
     path: "/admin",
     name: "AdminDashboard",
@@ -37,24 +59,35 @@ const router = createRouter({
   routes,
 });
 
-// Global Route Guard
+// Global route guard
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = store.getters.isAuthenticated; // Kullanıcı giriş yapmış mı?
-  const userRole = store.getters.userRole; // Kullanıcının rolü nedir?
+  const token = store.state.token;
 
-  // Kimlik doğrulaması gereken sayfalar için kontrol
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return next("/login"); // Giriş yapılmamışsa Login sayfasına yönlendir
+  // 1) Token süresi dolmuş mu?
+  if (token) {
+    const { exp = 0 } = parseJwt(token);
+    if (Date.now() >= exp * 1000) {
+      store.dispatch("logout");
+      return next({ name: "Login" });
+    }
   }
 
-  // Kullanıcının rolü, sayfanın rolüyle uyuşmuyor ise Login'e yönlendir
-  if (to.meta.role && to.meta.role !== userRole) {
-    return next("/login");
+  const isAuth = store.getters.isAuthenticated;
+  const role   = store.getters.userRole;
+
+  // 2) Auth gerektiren sayfalar
+  if (to.meta.requiresAuth && !isAuth) {
+    return next({ name: "Login" });
   }
 
-  // Admin kullanıcı Login sayfasına geldiğinde AdminDashboard'a yönlendir
-  if (to.path === "/login" && isAuthenticated && userRole === "Admin") {
-    return next("/admin-dashboard");
+  // 3) Role kontrolü
+  if (to.meta.role && to.meta.role !== role) {
+    return next({ name: "Login" });
+  }
+
+  // 4) Zaten girişli Admin, Login’e gelmesin
+  if (to.name === "Login" && isAuth && role === "Admin") {
+    return next({ name: "AdminDashboard" });
   }
 
   next();
