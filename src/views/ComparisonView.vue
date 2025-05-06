@@ -25,18 +25,22 @@
         <TextComparisonPane 
           :title="stats?.user1"
           :text="stats?.text1"
-          :match-spans="stats?.matchSpans"
+          :match-spans="processedSpans"
           :highlight-mode="highlightMode"
           type="start1"
           color="indigo"
+          @span-clicked="handleSpanClick"
+          ref="pane1"
         />
         <TextComparisonPane 
           :title="stats?.user2"
           :text="stats?.text2"
-          :match-spans="stats?.matchSpans"
+          :match-spans="processedSpans"
           :highlight-mode="highlightMode"
           type="start2"
           color="purple"
+          @span-clicked="handleSpanClick"
+          ref="pane2"
         />
       </div>
 
@@ -72,6 +76,7 @@ interface MatchSpan {
   start1?: number
   start2?: number
   length: number
+  id?: string // Eşleşme için benzersiz ID
 }
 
 interface ReportStats {
@@ -110,12 +115,23 @@ export default defineComponent({
     const showChart = ref(false)
     const loading = ref(true)
     const highlightMode = ref('none')
+    const pane1 = ref()
+    const pane2 = ref()
 
     const highlightModes = [
       { value: 'none', label: 'Tümü' },
       { value: 'match', label: 'Eşleşen' },
       { value: 'diff', label: 'Farklı' }
     ]
+
+    // Eşleşen span'lara benzersiz ID'ler ekleyelim
+    const processedSpans = computed(() => {
+      if (!stats.value?.matchSpans) return []
+      return stats.value.matchSpans.map((span, index) => ({
+        ...span,
+        id: `match-${index}` // Her eşleşme için benzersiz ID
+      }))
+    })
 
     const fetchData = async () => {
       const q = route.query
@@ -133,6 +149,14 @@ export default defineComponent({
         // Here you would add proper error handling and user notification
       } finally {
         loading.value = false
+      }
+    }
+
+    const handleSpanClick = (spanId: string) => {
+      // Tıklanan span'ın diğer paneldeki karşılığını bul ve kaydır
+      if (pane1.value && pane2.value) {
+        if (pane1.value.scrollToSpan) pane1.value.scrollToSpan(spanId)
+        if (pane2.value.scrollToSpan) pane2.value.scrollToSpan(spanId)
       }
     }
 
@@ -197,7 +221,11 @@ export default defineComponent({
       chartData,
       chartOptions,
       statCards,
-      toggleChart
+      toggleChart,
+      processedSpans,
+      handleSpanClick,
+      pane1,
+      pane2
     }
   }
 })
