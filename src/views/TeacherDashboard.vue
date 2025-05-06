@@ -988,7 +988,7 @@
           <!-- Comparison Success Modal -->
           <div
             v-if="isComparisonSuccess"
-            class="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50"
           >
             <div
               class="bg-white rounded-xl shadow-xl w-11/12 md:w-1/2 lg:w-1/3 p-6 text-center"
@@ -1209,13 +1209,12 @@ export default {
     },
 
     updateSimilarityFilter() {
-      // Filtreleme işlemleri burada yapılabilir
-      // Örneğin API'ye yeni istek atılabilir veya yerel veri filtrelenebilir
       console.log("Filtre güncellendi:", this.minSimilarity);
     },
     viewDetails(similarity) {
       if (!similarity) return;
-      this.$router.push({
+
+      const url = this.$router.resolve({
         name: "Comparison",
         params: { contentId: similarity.icerikId },
         query: {
@@ -1225,8 +1224,12 @@ export default {
           file2: encodeURIComponent(similarity.ikinciDosyaCleanPath),
           ratio: similarity.benzerlikOrani,
         },
-      });
+      }).href;
+      this.similaritymodalOpen=false; // Modalı kapat
+
+      window.open(url, "_blank"); // Yeni sekmede aç
     },
+
     async fetchAssignments() {
       try {
         this.isLoading = true; // Loading başlat
@@ -2270,7 +2273,7 @@ textarea {
   to {
     transform: rotate(360deg);
   }
-} 
+}
 
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
