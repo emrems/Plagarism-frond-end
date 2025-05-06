@@ -7,7 +7,7 @@ import Register         from "../views/Register.vue";
 import AdminDashboard   from "../views/AdminDashboard.vue";
 import TeacherDashboard from "../views/TeacherDashboard.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
-
+import ComparisonView from '@/views/ComparisonView.vue'
 // Basit JWT payload parse fonksiyonu
 function parseJwt(token: string): { exp?: number } {
   try {
@@ -52,6 +52,13 @@ const routes = [
     component: StudentDashboard,
     meta: { requiresAuth: true, role: "Student" },
   },
+  {
+    path: '/comparison/:contentId',
+    name: 'Comparison',
+    component: ComparisonView,
+    props: true,
+    meta: { requiresAuth: true, role: "Teacher" }
+  }
 ];
 
 const router = createRouter({

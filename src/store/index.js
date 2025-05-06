@@ -84,6 +84,15 @@ const store = createStore({
   },
   getters: {
     isAuthenticated: (state) => !!state.token,
+    tokenExpiresAt: (state) => {
+      try {
+        const { exp } = jwtDecode(state.token)
+        // exp saniye cinsinden, Date.now() ise ms
+        return exp * 1000
+      } catch {
+        return 0
+      }
+    },
     userRole: (state) => state.role,
     userId: (state) => state.id,
     getRefreshToken: (state) => state.refreshToken,

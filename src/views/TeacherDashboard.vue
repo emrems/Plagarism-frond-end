@@ -795,7 +795,7 @@
       <!-- Gönderilen Ödevler Modal -->
       <div
         v-if="isModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm transition-opacity"
       >
         <div
           class="bg-white rounded-xl shadow-xl w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 max-h-[90vh] flex flex-col"
@@ -988,7 +988,7 @@
           <!-- Comparison Success Modal -->
           <div
             v-if="isComparisonSuccess"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            class="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50"
           >
             <div
               class="bg-white rounded-xl shadow-xl w-11/12 md:w-1/2 lg:w-1/3 p-6 text-center"
@@ -1057,6 +1057,7 @@ export default {
   },
   data() {
     return {
+      selectedAssignmentId: null,
       // Düzenleme modalı için yeni eklenenler
       isEditModalOpen: false,
       editData: {
@@ -1212,52 +1213,19 @@ export default {
       // Örneğin API'ye yeni istek atılabilir veya yerel veri filtrelenebilir
       console.log("Filtre güncellendi:", this.minSimilarity);
     },
-    async viewDetails(similarity) {
-      try {
-        const response = await axios.post(
-          "http://127.0.0.1:5000/compare_html",
-          {
-            KullaniciAdi1: "emre",
-            KullaniciAdi2: "ali",
-            Dosya1: similarity.ilkDosyaCleanPath,
-            Dosya2: similarity.ikinciDosyaCleanPath,
-            BenzerlikOrani: similarity.benzerlikOrani,
-          },
-          {
-            headers: { Authorization: `Bearer ${this.$store.state.token}` },
-          }
-        );
-
-        if (response.status === 200) {
-          // this.similarityData = response.data;
-          console.log("Benzerlik detayları alındı:", response.data);
-        } else {
-          console.error("Beklenmeyen durum kodu:", response.status);
-          this.error = "Beklenmeyen bir yanıt alındı.";
-        }
-
-        console.log("Detaylar:", similarity);
-      } catch (error) {
-        console.error("Benzerlik detayları alınırken hata oluştu:", error);
-
-        if (error.response) {
-          // Sunucudan hata yanıtı alındı
-          console.error(
-            "Sunucu hatası:",
-            error.response.status,
-            error.response.data
-          );
-          this.error = `Sunucu hatası: ${error.response.status}`;
-        } else if (error.request) {
-          // İstek yapıldı ama yanıt alınamadı
-          console.error("Yanıt alınamadı:", error.request);
-          this.error = "Sunucudan yanıt alınamadı";
-        } else {
-          // İstek oluşturulurken hata oluştu
-          console.error("İstek hatası:", error.message);
-          this.error = "İstek oluşturulurken hata oluştu";
-        }
-      }
+    viewDetails(similarity) {
+      if (!similarity) return;
+      this.$router.push({
+        name: "Comparison",
+        params: { contentId: similarity.icerikId },
+        query: {
+          user1: similarity.ilkKullaniciAdiSoyad,
+          user2: similarity.ikinciKullaniciAdiSoyad,
+          file1: encodeURIComponent(similarity.ilkDosyaCleanPath),
+          file2: encodeURIComponent(similarity.ikinciDosyaCleanPath),
+          ratio: similarity.benzerlikOrani,
+        },
+      });
     },
     async fetchAssignments() {
       try {
@@ -1277,7 +1245,7 @@ export default {
         );
 
         if (response.status === 200) {
-          //console.log("Ödevler alındı:", response.data);
+          console.log("Ödevler alındı:", response.data);
           this.assignments = response.data.map((assignment) => ({
             ...assignment,
             showSubmissions: false,
@@ -1352,14 +1320,14 @@ export default {
       }
 
       try {
-        this.isLoading = true; // Loading başlat
+        this.isLoading = true;
         const response = await axios.post(
-          "http://127.0.0.1:5000/compare", // Flask backend URL'si
-          { content_id: this.currentIcerikId }, // Gönderilen veri
+          "http://127.0.0.1:5000/compare",
+          { content_id: this.currentIcerikId },
           {
             headers: {
-              "Content-Type": "application/json", // JSON formatında olduğunu belirt
-              Authorization: `Bearer ${this.$store.state.token}`, // Gerekirse token ekleyin
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${this.$store.state.token}`,
             },
           }
         );
@@ -1377,31 +1345,50 @@ export default {
       }
     },
     async openModel(icerikId) {
-      try {
-        const response = await axios.get(
-          `https://localhost:7057/api/BenzerlikSonuclari/icerik/${icerikId}`,
-          {
-            headers: { Authorization: `Bearer ${this.$store.state.token}` },
-          }
-        );
-        if (response.status === 200) {
-          console.log("Benzerlik sonuçları alındı:", response.data);
-          this.similarityData = Array.isArray(response.data)
-            ? response.data
-            : [];
-          this.similaritymodalOpen = true;
-        } else {
-          console.error(
-            "Benzerlik sonuçları alınamadı. Status:",
-            response.status
+      this.isLoading = true;
+      this.error = "";
+
+      // 1) İlgili ödevi bul
+      const assignment = this.assignments.find((a) => a.icerikId === icerikId);
+      if (!assignment) {
+        this.error = "Ödev bulunamadı.";
+        this.isLoading = false;
+        return;
+      }
+
+      // 2) Uzantıyı al ve türü belirle
+      const ext = (assignment.icerikTuru || "").toLowerCase();
+      const isTextDoc = ["text", "doc", "docx", "pdf"].includes(ext);
+
+      if (isTextDoc) {
+        // 3a) Metin/pdf/doc ise: benzerlik sonuçlarını getir
+        try {
+          const resp = await axios.get(
+            `https://localhost:7057/api/BenzerlikSonuclari/icerik/${icerikId}`,
+            { headers: { Authorization: `Bearer ${this.$store.state.token}` } }
           );
-          this.error = "Benzerlik sonuçları alınamadı.";
+          this.similarityData = Array.isArray(resp.data) ? resp.data : [];
+          this.similaritymodalOpen = true;
+        } catch (err) {
+          console.error(err);
+          this.error = "Benzerlik sonuçları alınamadı. Lütfen tekrar deneyin.";
+        } finally {
+          this.isLoading = false;
         }
-      } catch (error) {
-        console.error("Benzerlik sonuçları alınamadı:", error);
-        this.error = "Benzerlik sonuçları alınamadı. Lütfen tekrar deneyin.";
-      } finally {
-        this.isLoading = false; // Loading durdur
+      } else {
+        // 3b) Kod tabanlıysa: JPlag arayüzünü başlat
+        try {
+          const { data } = await axios.post(
+            "http://127.0.0.1:5000/jplag/view",
+            { content_id: icerikId },
+            { headers: { Authorization: `Bearer ${this.$store.state.token}` } }
+          );
+        } catch (err) {
+          console.error(err);
+          this.error = "JPlag arayüzü açılamadı. Lütfen tekrar deneyin.";
+        } finally {
+          this.isLoading = false;
+        }
       }
     },
 
@@ -1645,14 +1632,34 @@ export default {
     async viewFile(submission) {
       try {
         this.isLoading = true;
-        // Token'ı query parametresi olarak eklendi
         const token = this.$store.state.token;
-        const url = `https://localhost:7057/api/Dosya/view/${
-          submission.dosyaId
-        }?token=${encodeURIComponent(token)}`;
+        const fileId = submission.dosyaId;
+        const url = `https://localhost:7057/api/Dosya/view/${fileId}`;
 
-        // Yeni sekmede aç
-        window.open(url, "_blank");
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          console.error(
+            "Dosya görüntüleme hatası:",
+            response.status,
+            response.statusText
+          );
+          this.$toast.error(
+            `Dosya görüntülenirken hata oluştu: ${response.statusText}`
+          );
+          return;
+        }
+
+        const blob = await response.blob();
+        const fileURL = URL.createObjectURL(blob);
+        window.open(fileURL, "_blank");
+        URL.revokeObjectURL(fileURL); // Belleği temizle
       } catch (error) {
         console.error("Dosya görüntüleme hatası:", error);
         this.$toast.error("Dosya görüntülenirken hata oluştu");
@@ -2077,7 +2084,7 @@ textarea {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2263,7 +2270,7 @@ textarea {
   to {
     transform: rotate(360deg);
   }
-}
+} 
 
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
