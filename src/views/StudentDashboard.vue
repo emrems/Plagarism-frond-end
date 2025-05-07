@@ -456,6 +456,98 @@
       </div>
     </div>
   </div>
+  <!-- Ödev Detay Modalı -->
+  <div
+    v-if="showDetails"
+    class="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50"
+  >
+    <div class="bg-white rounded-xl shadow-xl w-11/12 md:w-1/2 lg:w-1/3 p-6">
+      <h2 class="text-xl font-bold mb-4 text-indigo-700">
+        <strong>Ödevin Adı :</strong>{{ assignmentDetails?.baslik }}
+      </h2>
+      <p class="mb-2">
+        <strong>Açıklama:</strong> {{ assignmentDetails?.aciklama }}
+      </p>
+      <p class="mb-2">
+        <strong>Ödevin Türü:</strong> {{ assignmentDetails?.icerikTuru }}
+      </p>
+      <p class="mb-2">
+        <strong>Oluşturma Tarihi:</strong>
+        {{ new Date(assignmentDetails?.olusturmaTarihi).toLocaleString() }}
+      </p>
+      <p class="mb-2">
+        <strong>Bitiş Tarihi:</strong>
+        {{ new Date(assignmentDetails?.bitisTarihi).toLocaleString() }}
+      </p>
+      <p class="mb-2">
+        <strong>Ödevi oluşturan Öğretmen:</strong> {{ assignmentDetails?.kullaniciAd }}
+        {{ assignmentDetails?.kullaniciSoyad }} ({{
+          assignmentDetails?.kullaniciEposta
+        }})
+      </p>
+      <div class="text-right mt-6">
+        <button
+          @click="showDetails = false"
+          class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+        >
+          Kapat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Başarı Mesajı Modal -->
+  <div
+        v-if="successMessage"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+      >
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 sm:max-w-md transform transition-all duration-300 scale-95 hover:scale-100"
+        >
+          <div class="p-6">
+            <div class="flex items-center justify-center mb-5">
+              <div
+                class="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full"
+              >
+                <svg
+                  class="w-8 h-8 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <h3
+                class="text-2xl font-semibold text-gray-800 dark:text-white mb-2"
+              >
+                Tebrikler!
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-6">
+                Ödev Başarıyla yüklendi!
+              </p>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                @click="closeSuccessMessage"
+                class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50"
+              >
+                Tamam
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 </template>
 
 <script>
@@ -465,6 +557,9 @@ import { mapGetters } from "vuex";
 export default {
   data() {
     return {
+      successMessage:null,
+      assignmentDetails: null,
+      showDetails: false,
       assignments: [],
       notifications: [],
       uploadedFiles: {},
@@ -668,9 +763,9 @@ export default {
         const formData = new FormData();
         formData.append("user_id", this.$store.getters.userId);
         formData.append("content_id", icerikId);
-        formData.append("baslik", assignment.baslik); 
+        formData.append("baslik", assignment.baslik);
         formData.append("ad_soyad", this.$store.state.userName);
-        formData.append("icerik_turu", assignment.icerikTuru);  
+        formData.append("icerik_turu", assignment.icerikTuru);
         formData.append("file", file);
 
         const response = await axios.post(
@@ -684,7 +779,8 @@ export default {
           }
         );
         console.log("Dosya başarıyla yüklendi:", response.data);
-        alert("Dosya başarıyla yüklendi!");
+       // alert("Dosya başarıyla yüklendi!");
+        this.successMessage = "Dosya başarıyla yüklendi:"
         // Başarılı yükleme sonrası yapılacak işlemler (örneğin, uploadedFiles dizisini temizleme)
         this.uploadedFiles[icerikId] = null;
       } catch (error) {
@@ -693,8 +789,22 @@ export default {
       }
     },
 
-    viewDetails(icerikId) {
-      console.log(`Ödev ${icerikId} detayları gösteriliyor...`);
+    async viewDetails(icerikId) {
+      try {
+        const response = await axios.get(
+          `https://localhost:7057/api/Icerik/details/${icerikId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.$store.state.token}`,
+            },
+          }
+        );
+        this.assignmentDetails = response.data;
+        this.showDetails = true;
+        console.log("Detaylar alındı:", response.data);
+      } catch (error) {
+        console.error("Detaylar görüntülenirken hata oluştu:", error);
+      }
     },
 
     formatDate(date) {
@@ -763,6 +873,9 @@ export default {
     async logout() {
       this.$store.dispatch("logout");
       this.$router.push({ name: "Login" });
+    },
+    closeSuccessMessage() {
+      this.successMessage = "";
     },
   },
   async mounted() {
