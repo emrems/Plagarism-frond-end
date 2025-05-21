@@ -540,7 +540,7 @@
                   </div>
 
                   <button
-                    @click="deleteAssignment(assignment.id)"
+                    @click="deleteAssignment(assignment.icerikId)"
                     class="btn-delete"
                   >
                     <svg
@@ -756,7 +756,7 @@
                         ></div>
                       </div>
                       <span class="text-sm font-semibold whitespace-nowrap">
-                        {{ (similarity.benzerlikOrani * 100).toFixed(0) }}%
+                        {{ (similarity.benzerlikOrani * 100).toFixed(2) }}%
                       </span>
                     </div>
                   </div>
@@ -1058,8 +1058,7 @@ export default {
   data() {
     return {
       selectedAssignmentId: null,
-      // Düzenleme modalı için yeni eklenenler
-      isEditModalOpen: false,
+      isEditModalOpen: false,//düzenleme modalı açık mı kapalı mı
       editData: {
         Baslik: "",
         Aciklama: "",
