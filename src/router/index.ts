@@ -8,6 +8,8 @@ import AdminDashboard   from "../views/AdminDashboard.vue";
 import TeacherDashboard from "../views/TeacherDashboard.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
 import ComparisonView from '@/views/ComparisonView.vue'
+import ErrorGithub from "@/components/ErrorView/ErrorGithub.vue"; 
+import ErrorGoogle from "@/components/ErrorView/ErrorGoogle.vue";
 // Basit JWT payload parse fonksiyonu
 function parseJwt(token: string): { exp?: number } {
   try {
@@ -58,7 +60,15 @@ const routes = [
     component: ComparisonView,
     props: true,
     meta: { requiresAuth: true, role: "Teacher" }
-  }
+  },{
+    path : '/error/github',
+    name : 'ErrorGithub',
+    component : ErrorGithub,
+  },{
+    path : '/error/google',
+    name : 'ErrorGoogle',
+    component : ErrorGoogle,
+  },
 ];
 
 const router = createRouter({

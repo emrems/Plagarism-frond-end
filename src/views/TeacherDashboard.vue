@@ -1217,11 +1217,14 @@ export default {
         name: "Comparison",
         params: { contentId: similarity.icerikId },
         query: {
-          user1: similarity.ilkKullaniciAdiSoyad,
-          user2: similarity.ikinciKullaniciAdiSoyad,
-          file1: encodeURIComponent(similarity.ilkDosyaCleanPath),
-          file2: encodeURIComponent(similarity.ikinciDosyaCleanPath),
-          ratio: similarity.benzerlikOrani,
+          // user1: similarity.ilkKullaniciAdiSoyad,
+          // user2: similarity.ikinciKullaniciAdiSoyad,
+          // file1: encodeURIComponent(similarity.ilkDosyaCleanPath),
+          // file2: encodeURIComponent(similarity.ikinciDosyaCleanPath),
+          // ratio: similarity.benzerlikOrani,
+          //contentId: similarity.icerikId,
+          file1_id: similarity.file1_id,
+          file2_id: similarity.file2_id,
         },
       }).href;
       this.similaritymodalOpen=false; // Modalı kapat
@@ -1370,6 +1373,7 @@ export default {
             { headers: { Authorization: `Bearer ${this.$store.state.token}` } }
           );
           this.similarityData = Array.isArray(resp.data) ? resp.data : [];
+          console.log("Benzerlik sonuçları alındı:", this.similarityData);
           this.similaritymodalOpen = true;
         } catch (err) {
           console.error(err);

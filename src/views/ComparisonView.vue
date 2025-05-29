@@ -58,7 +58,9 @@
             class="bg-white rounded-xl shadow-xl w-11/12 max-w-5xl max-h-[90vh] overflow-y-auto p-6 space-y-6"
           >
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-semibold text-gray-800">İstatistik ve Grafik</h2>
+              <h2 class="text-xl font-semibold text-gray-800">
+                İstatistik ve Grafik
+              </h2>
               <button
                 @click="toggleChart"
                 class="text-sm text-gray-500 hover:text-gray-700"
@@ -152,18 +154,32 @@ export default defineComponent({
     });
 
     const fetchData = async () => {
-      const q = route.query;
+      // content_id'yi route.params'tan al
+      const content_id_from_path = route.params.contentId;
+
+      // file1_id ve file2_id'yi route.query'den al
+      const file1_id_from_query = route.query.file1_id;
+      const file2_id_from_query = route.query.file2_id;
+
+      console.log("Gönderilecek content_id:", content_id_from_path);
+      console.log("Gönderilecek file1_id:", file1_id_from_query);
+      console.log("Gönderilecek file2_id:", file2_id_from_query);
+
       try {
-        const res = await axios.post("http://localhost:5000/compare_json", {
-          KullaniciAdi1: q.user1,
-          KullaniciAdi2: q.user2,
-          Dosya1: decodeURIComponent(q.file1 as string),
-          Dosya2: decodeURIComponent(q.file2 as string),
-          BenzerlikOrani: Number(q.ratio) || 0,
-        });
+        const res = await axios.post(
+          "http://localhost:5000/get_comparison_detail_json",
+          {
+            content_id: Number(content_id_from_path),
+            file1_id: Number(file1_id_from_query), //
+            file2_id: Number(file2_id_from_query),
+          }
+        );
         stats.value = res.data;
       } catch (err) {
         console.error("Veri alınamadı", err);
+        if (axios.isAxiosError(err) && err.response) {
+          console.error("API Yanıt Hatası:", err.response.data);
+        }
       } finally {
         loading.value = false;
       }

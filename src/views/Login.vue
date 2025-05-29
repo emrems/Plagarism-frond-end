@@ -102,6 +102,7 @@
         
         <div class="mt-6 grid grid-cols-2 gap-3">
           <button
+            @click="loginWithGithub"
             type="button"
             class="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
@@ -112,6 +113,7 @@
           </button>
           
           <button
+            @click="loginWithGoogle"
             type="button"
             class="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
@@ -187,6 +189,14 @@ export default {
       if (routes[role]) {
         this.$router.push({ name: routes[role] });
       }
+    },
+    loginWithGithub(){
+      this.$router.push({ name: 'ErrorGithub' });
+      //alert("GitHub ile giriş yapma işlemi henüz uygulanmadı.");
+    },
+    loginWithGoogle(){
+      this.$router.push({ name: 'ErrorGoogle' });
+      //alert("Google ile giriş yapma işlemi henüz uygulanmadı.");
     },
     setupAxiosInterceptors() {
       axios.interceptors.response.use(
